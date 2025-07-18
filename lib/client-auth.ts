@@ -245,6 +245,11 @@ class ClientAuthService {
 
   // Helper method to get stored users from localStorage
   private getStoredUsers() {
+    // Prevent SSR access to localStorage
+    if (typeof window === "undefined") {
+      return [];
+    }
+
     try {
       const usersStr = localStorage.getItem("croplink-users");
       console.log(
