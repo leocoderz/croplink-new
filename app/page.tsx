@@ -195,19 +195,20 @@ export default function CropLinkApp() {
 
       setFarmData((prev) => {
         // Only make small realistic changes to calculated metrics
+        const randomSeed = (Date.now() % 1000) / 1000; // Deterministic pseudo-random
         const updated = {
           ...prev,
           soilMoisture: Math.max(
             30,
-            Math.min(95, prev.soilMoisture + (Math.random() - 0.5) * 3),
+            Math.min(95, prev.soilMoisture + (randomSeed - 0.5) * 3),
           ),
           healthScore: Math.max(
             60,
-            Math.min(100, prev.healthScore + (Math.random() - 0.5) * 2),
+            Math.min(100, prev.healthScore + (randomSeed - 0.5) * 2),
           ),
           efficiency: Math.max(
             60,
-            Math.min(100, prev.efficiency + (Math.random() - 0.5) * 1.5),
+            Math.min(100, prev.efficiency + (randomSeed - 0.5) * 1.5),
           ),
           lastUpdated: new Date().toISOString(),
         };
