@@ -125,6 +125,12 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
           console.error("Speech recognition error:", event.error);
           setIsListening(false);
 
+          // Clear timeout on error
+          if (recognitionTimeoutRef.current) {
+            clearTimeout(recognitionTimeoutRef.current);
+            recognitionTimeoutRef.current = null;
+          }
+
           // Handle errors gracefully without alerts
           let errorMessage = "";
           let shouldNotify = false;
