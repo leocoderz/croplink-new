@@ -200,32 +200,36 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearValidationErrors();
 
-    // Validate passwords match
-    if (signUpData.password !== signUpData.confirmPassword) {
-      toast({
-        title: "Password mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Validate all fields
+    const nameValidation = validateName(signUpData.name);
+    const emailValidation = validateEmail(signUpData.email);
+    const phoneValidation = validatePhone(signUpData.phone);
+    const passwordValidation = validatePassword(signUpData.password);
+    const confirmPasswordValidation = validateConfirmPassword(
+      signUpData.password,
+      signUpData.confirmPassword,
+    );
 
-    // Validate password strength
-    if (signUpData.password.length < 8) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Set individual field errors
+    setNameError(nameValidation);
+    setEmailError(emailValidation);
+    setPhoneError(phoneValidation);
+    setPasswordError(passwordValidation);
+    setConfirmPasswordError(confirmPasswordValidation);
 
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(signUpData.password)) {
+    // Check if any validation failed
+    if (
+      nameValidation ||
+      emailValidation ||
+      phoneValidation ||
+      passwordValidation ||
+      confirmPasswordValidation
+    ) {
       toast({
-        title: "Password too weak",
-        description:
-          "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
+        title: "❌ Validation Error",
+        description: "Please fix the highlighted errors below and try again.",
         variant: "destructive",
       });
       return;
