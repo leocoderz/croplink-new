@@ -1339,6 +1339,26 @@ export default function CropLinkApp() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showNotifications]);
 
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-2xl">
+            <Leaf className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
+          </div>
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-green-500 mx-auto mb-4 sm:mb-6"></div>
+          <p className="text-xl sm:text-2xl font-bold text-gray-600 dark:text-gray-400">
+            Loading CropLink...
+          </p>
+          <p className="text-gray-500 dark:text-gray-500 mt-2 sm:mt-3 text-sm sm:text-base">
+            Your agricultural companion
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading screen while checking authentication
   if (isLoading || !isAppReady) {
     console.log("🔄 Showing loading screen", {
