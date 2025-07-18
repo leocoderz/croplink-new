@@ -351,9 +351,15 @@ export default function CropLinkApp() {
       console.log("🔄 Setting user state:", userData);
       console.log("🔄 Current showAuthModal state:", showAuthModal);
 
+      // Set user state immediately
       setUser(userData);
-      setShowAuthModal(false);
-      setIsAppReady(true);
+
+      // Force close the modal and set app ready
+      setTimeout(() => {
+        setShowAuthModal(false);
+        setIsAppReady(true);
+        console.log("✅ Modal closed and app ready");
+      }, 100);
 
       console.log("✅ User state updated, modal should close");
 
