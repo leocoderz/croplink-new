@@ -277,3 +277,9 @@ class ClientAuthService {
 }
 
 export const clientAuthService = new ClientAuthService();
+
+// Initialize the auth service
+if (typeof window !== "undefined") {
+  // Trigger initialization by calling getStoredUsers
+  clientAuthService["getStoredUsers"]();
+}
