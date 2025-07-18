@@ -1339,6 +1339,7 @@ export default function CropLinkApp() {
 
   // Show loading screen while checking authentication
   if (isLoading || !isAppReady) {
+    console.log("🔄 Showing loading screen", { isLoading, isAppReady });
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
         <div className="text-center">
