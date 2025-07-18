@@ -238,6 +238,11 @@ class ClientAuthService {
     console.log("✅ User logged out from client auth service");
   }
 
+  // Initialize auth service (creates test user if needed)
+  init() {
+    this.getStoredUsers();
+  }
+
   // Helper method to get stored users from localStorage
   private getStoredUsers() {
     try {
