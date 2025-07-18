@@ -355,30 +355,22 @@ export default function CropLinkApp() {
   const handleAuthSuccess = useCallback(
     (userData: any) => {
       console.log("🎉 Authentication successful:", userData);
+      console.log("🔄 Setting user and closing modal...");
 
-      // Immediately set all necessary states
-      console.log("🔄 Setting user state...");
+      // Set user state - this will trigger the main app to render
       setUser(userData);
-
-      console.log("🔄 Closing auth modal...");
       setShowAuthModal(false);
-
-      console.log("🔄 Setting app ready...");
+      setIsLoading(false);
       setIsAppReady(true);
 
-      console.log("🔄 Setting loading to false...");
-      setIsLoading(false);
-
-      console.log("✅ All states updated - should show main app now");
+      console.log("✅ Auth success handled - app should render");
 
       // Add welcome notification
-      setTimeout(() => {
-        addNotification({
-          title: "Welcome to CropLink!",
-          message: `Hello ${userData.name}, welcome to your agricultural companion.`,
-          type: "success",
-        });
-      }, 100);
+      addNotification({
+        title: "Welcome to CropLink!",
+        message: `Hello ${userData.name}, welcome to your agricultural companion.`,
+        type: "success",
+      });
     },
     [addNotification],
   );
