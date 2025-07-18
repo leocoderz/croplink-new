@@ -349,19 +349,29 @@ export default function CropLinkApp() {
     (userData: any) => {
       console.log("🎉 Authentication successful:", userData);
 
-      // Set user state - this will hide the auth modal and show main app
+      // Immediately set all necessary states
+      console.log("🔄 Setting user state...");
       setUser(userData);
+
+      console.log("🔄 Closing auth modal...");
       setShowAuthModal(false);
+
+      console.log("🔄 Setting app ready...");
       setIsAppReady(true);
 
-      console.log("✅ User state updated, switching to main app");
+      console.log("🔄 Setting loading to false...");
+      setIsLoading(false);
+
+      console.log("✅ All states updated - should show main app now");
 
       // Add welcome notification
-      addNotification({
-        title: "Welcome to CropLink!",
-        message: `Hello ${userData.name}, welcome to your agricultural companion.`,
-        type: "success",
-      });
+      setTimeout(() => {
+        addNotification({
+          title: "Welcome to CropLink!",
+          message: `Hello ${userData.name}, welcome to your agricultural companion.`,
+          type: "success",
+        });
+      }, 100);
     },
     [addNotification],
   );
