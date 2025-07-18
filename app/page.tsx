@@ -306,51 +306,33 @@ export default function CropLinkApp() {
 
   // Initialize app and check authentication
   useEffect(() => {
-    const initializeApp = () => {
-      console.log("🚀 Initializing CropLink app...");
+    console.log("🚀 Starting app initialization...");
 
-      try {
-        // Initialize auth service first
-        console.log("🔧 Initializing auth service...");
-        clientAuthService.init();
+    try {
+      // Check for existing user
+      const authData = clientAuthService.getCurrentUser();
+      console.log("🔍 Auth check result:", authData);
 
-        // Check for saved user data using client auth service
-        const authData = clientAuthService.getCurrentUser();
-        console.log("🔍 Auth data check:", {
-          isAuthenticated: authData.isAuthenticated,
-          hasUser: !!authData.user,
-          userName: authData.user?.name,
-        });
-
-        if (authData.isAuthenticated && authData.user) {
-          console.log("✅ Found authenticated user:", authData.user.name);
-          setUser(authData.user);
-          setShowAuthModal(false);
-
-          addNotification({
-            title: "Welcome back!",
-            message: `Hello ${authData.user.name}, welcome back to CropLink.`,
-            type: "success",
-          });
-        } else {
-          console.log("ℹ️ No authenticated user found - showing auth modal");
-          setUser(null);
-          setShowAuthModal(true);
-        }
-      } catch (error) {
-        console.error("❌ App initialization error:", error);
+      if (authData.isAuthenticated && authData.user) {
+        console.log("✅ Found user:", authData.user.name);
+        setUser(authData.user);
+        setShowAuthModal(false);
+      } else {
+        console.log("ℹ️ No user - showing auth");
         setUser(null);
         setShowAuthModal(true);
       }
+    } catch (error) {
+      console.error("❌ Init error:", error);
+      setUser(null);
+      setShowAuthModal(true);
+    }
 
-      console.log("🏁 Initialization complete - setting ready states");
-      setIsLoading(false);
-      setIsAppReady(true);
-    };
-
-    // Add small delay to ensure DOM is ready
-    setTimeout(initializeApp, 100);
-  }, [addNotification]);
+    // Always complete initialization
+    console.log("✅ Setting app ready");
+    setIsLoading(false);
+    setIsAppReady(true);
+  }, []);
 
   const handleAuthSuccess = useCallback(
     (userData: any) => {
