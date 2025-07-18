@@ -1387,6 +1387,7 @@ export default function CropLinkApp() {
 
   // Show auth modal if no user is logged in
   if (!user) {
+    console.log("🔐 Showing auth modal - no user found");
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
         <div className="min-h-screen flex items-center justify-center">
