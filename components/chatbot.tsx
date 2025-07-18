@@ -86,6 +86,26 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
         recognitionInstance.onstart = () => {
           console.log("Speech recognition started");
           setIsListening(true);
+
+          // Set a timeout to auto-stop recognition after 10 seconds
+          recognitionTimeoutRef.current = setTimeout(() => {
+            if (recognitionInstance && isListening) {
+              try {
+                recognitionInstance.stop();
+                const timeoutMessage: Message = {
+                  id: Date.now(),
+                  text: "⏱️ Voice input timed out. Please try again or type your message.",
+                  sender: "bot",
+                  timestamp: new Date(),
+                  type: "info",
+                  suggestions: ["Try again", "Type instead"],
+                };
+                setMessages((prev) => [...prev, timeoutMessage]);
+              } catch (error) {
+                console.error("Error stopping recognition on timeout:", error);
+              }
+            }
+          }, 10000); // 10 second timeout
         };
 
         recognitionInstance.onresult = (event) => {
