@@ -93,32 +93,44 @@ class ClientAuthService {
       // Clear any existing data first
       this.clearUserData();
 
-      const response = await fetch(`${this.baseUrl}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      // Get stored users (simulate database lookup)
+      const storedUsers = this.getStoredUsers();
+      const user = storedUsers.find(
+        (u) => u.email === data.email.trim().toLowerCase(),
+      );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Login failed");
+      if (!user) {
+        throw new Error("No account found with this email address");
       }
+
+      // Check password (in real app, would compare hashed passwords)
+      const providedPasswordHash = btoa(data.password);
+      if (user.password !== providedPasswordHash) {
+        throw new Error("Incorrect password");
+      }
+
+      // Create clean user object (without password)
+      const userInfo = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt,
+      };
+
+      // Generate new token
+      const token = `token_${user.id}_${Date.now()}`;
 
       // Store user data and token
-      if (result.user && result.token) {
-        this.storeUserData(result.user, result.token);
-
-        // Send login alert SMS if user has phone number
-        if (result.user.phone) {
-          this.sendLoginAlertSMS(result.user.phone, result.user.name);
-        }
-      }
+      this.storeUserData(userInfo, token);
 
       console.log("✅ Login successful");
-      return { success: true, ...result };
+      return {
+        success: true,
+        user: userInfo,
+        token,
+        message: "Login successful!",
+      };
     } catch (error: any) {
       console.error("❌ Login error:", error);
       return { success: false, message: error.message };
