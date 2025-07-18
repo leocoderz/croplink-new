@@ -218,6 +218,24 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
     }
   }, []);
 
+  // Cleanup effect for speech recognition
+  useEffect(() => {
+    return () => {
+      // Cleanup timeout on unmount
+      if (recognitionTimeoutRef.current) {
+        clearTimeout(recognitionTimeoutRef.current);
+      }
+      // Stop recognition if it's running
+      if (recognition && isListening) {
+        try {
+          recognition.stop();
+        } catch (error) {
+          console.error("Error stopping recognition on cleanup:", error);
+        }
+      }
+    };
+  }, [recognition, isListening]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
