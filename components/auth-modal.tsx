@@ -156,6 +156,26 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearValidationErrors();
+
+    // Validate signin fields
+    const emailValidation = validateEmail(signInData.email);
+    const passwordValidation = signInData.password
+      ? ""
+      : "Password is required";
+
+    setEmailError(emailValidation);
+    setPasswordError(passwordValidation);
+
+    if (emailValidation || passwordValidation) {
+      toast({
+        title: "❌ Validation Error",
+        description: "Please fix the highlighted errors below and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
