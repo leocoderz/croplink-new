@@ -199,6 +199,15 @@ class ClientAuthService {
 
   // Get current user from localStorage
   getCurrentUser() {
+    // Prevent SSR access to localStorage
+    if (typeof window === "undefined") {
+      return {
+        user: null,
+        token: null,
+        isAuthenticated: false,
+      };
+    }
+
     try {
       const userStr =
         localStorage.getItem("agri-app-user") ||
