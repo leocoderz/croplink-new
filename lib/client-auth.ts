@@ -285,10 +285,9 @@ export const clientAuthService = new ClientAuthService();
 
 // Initialize the auth service
 if (typeof window !== "undefined") {
-  // Initialize by checking stored users (this will create test user if none exist)
   try {
-    const users = clientAuthService["getStoredUsers"]();
-    console.log("🔧 Auth service initialized with", users.length, "users");
+    clientAuthService.init();
+    console.log("🔧 Auth service initialized successfully");
   } catch (error) {
     console.error("Failed to initialize auth service:", error);
   }
