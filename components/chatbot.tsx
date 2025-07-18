@@ -65,6 +65,7 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
   const [recognition, setRecognition] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize speech recognition
   useEffect(() => {
