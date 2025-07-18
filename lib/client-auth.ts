@@ -217,6 +217,17 @@ class ClientAuthService {
     this.clearUserData();
     console.log("✅ User logged out from client auth service");
   }
+
+  // Helper method to get stored users from localStorage
+  private getStoredUsers() {
+    try {
+      const usersStr = localStorage.getItem("croplink-users");
+      return usersStr ? JSON.parse(usersStr) : [];
+    } catch (error) {
+      console.error("Error getting stored users:", error);
+      return [];
+    }
+  }
 }
 
 export const clientAuthService = new ClientAuthService();
