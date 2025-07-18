@@ -643,13 +643,27 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type="text"
                         placeholder="Enter your full name"
                         value={signUpData.name}
-                        onChange={(e) =>
-                          setSignUpData({ ...signUpData, name: e.target.value })
-                        }
-                        className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
+                        onChange={(e) => {
+                          setSignUpData({
+                            ...signUpData,
+                            name: e.target.value,
+                          });
+                          if (nameError) setNameError("");
+                        }}
+                        className={`pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-base ${
+                          nameError
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-gray-300 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400"
+                        }`}
                         required
                       />
                     </div>
+                    {nameError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <span className="mr-1">⚠️</span>
+                        {nameError}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label
