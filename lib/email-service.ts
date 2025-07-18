@@ -12,7 +12,7 @@ const EMAIL_CONFIG = {
 };
 
 // Create transporter
-const transporter = nodemailer.createTransporter(EMAIL_CONFIG);
+const transporter = nodemailer.createTransport(EMAIL_CONFIG);
 
 // Verify transporter configuration
 export async function verifyEmailConfiguration() {
