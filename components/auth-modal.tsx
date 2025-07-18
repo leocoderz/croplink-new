@@ -550,13 +550,18 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={signInData.password}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setSignInData({
                             ...signInData,
                             password: e.target.value,
-                          })
-                        }
-                        className="pl-10 pr-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
+                          });
+                          if (passwordError) setPasswordError("");
+                        }}
+                        className={`pl-10 pr-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-base ${
+                          passwordError
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-gray-300 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400"
+                        }`}
                         required
                       />
                       <Button
