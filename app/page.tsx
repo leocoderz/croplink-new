@@ -314,23 +314,24 @@ export default function CropLinkApp() {
         // Small delay for smooth loading animation
         await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Temporarily bypass authentication for testing
-        const mockUser = {
-          id: "test-user",
-          name: "Test User",
-          email: "test@example.com",
-          phone: "1234567890",
-        };
+        // Check for saved user data using client auth service
+        const authData = clientAuthService.getCurrentUser();
 
-        console.log("✅ Using mock user for testing:", mockUser.name);
-        setUser(mockUser);
-        setShowAuthModal(false);
+        if (authData.isAuthenticated && authData.user) {
+          console.log("✅ Found authenticated user:", authData.user.name);
+          setUser(authData.user);
+          setShowAuthModal(false);
 
-        addNotification({
-          title: "Welcome to CropLink!",
-          message: `Hello ${mockUser.name}, welcome to your agricultural companion.`,
-          type: "success",
-        });
+          addNotification({
+            title: "Welcome back!",
+            message: `Hello ${authData.user.name}, welcome back to CropLink.`,
+            type: "success",
+          });
+        } else {
+          console.log("ℹ️ No authenticated user found");
+          setUser(null);
+          setShowAuthModal(true);
+        }
       } catch (error) {
         console.error("❌ App initialization error:", error);
         setUser(null);
