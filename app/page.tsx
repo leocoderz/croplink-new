@@ -1384,7 +1384,6 @@ export default function CropLinkApp() {
 
   // Show sign out message
   if (showSignOutMessage) {
-    console.log("👋 Showing sign out message");
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
         <div className="min-h-screen flex items-center justify-center">
