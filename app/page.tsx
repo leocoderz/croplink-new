@@ -45,6 +45,7 @@ export default function CropLinkApp() {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showSignOutMessage, setShowSignOutMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Real Farm Data State - Load from localStorage and sync with analytics
   const [farmData, setFarmData] = useState({
