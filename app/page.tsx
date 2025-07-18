@@ -27,7 +27,7 @@ import { FarmSetupModal } from "@/components/farm-setup-modal";
 import { clientAuthService } from "@/lib/client-auth";
 
 export default function CropLinkApp() {
-  console.log("🌾 CropLinkApp component is rendering");
+  // Removed debug log to prevent console spam;
   const [activeTab, setActiveTab] = useState("home");
   const [notifications, setNotifications] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
