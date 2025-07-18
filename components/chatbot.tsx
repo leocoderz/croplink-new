@@ -197,6 +197,12 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
         recognitionInstance.onend = () => {
           console.log("Speech recognition ended");
           setIsListening(false);
+
+          // Clear timeout when recognition ends
+          if (recognitionTimeoutRef.current) {
+            clearTimeout(recognitionTimeoutRef.current);
+            recognitionTimeoutRef.current = null;
+          }
         };
 
         setRecognition(recognitionInstance);
