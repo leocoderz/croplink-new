@@ -170,12 +170,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         // Auto-login after successful signup
         if (result.user) {
           console.log("🔄 Calling onAuthSuccess with user:", result.user);
-
-          // Small delay to ensure all async operations complete
-          setTimeout(() => {
-            onAuthSuccess(result.user);
-            onClose();
-          }, 100);
+          onAuthSuccess(result.user);
+          onClose();
 
           // Reset form
           setSignUpData({
