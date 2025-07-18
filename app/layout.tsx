@@ -18,8 +18,13 @@ export const metadata: Metadata = {
   creator: "CropLink",
   publisher: "CropLink",
   robots: "noindex, nofollow, noarchive, nosnippet, noimageindex",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
+}
+export function generateViewport() {
+  return {
+    width: 'device-width',
+    initialScale: 1,
+  };
 }
 
 export default function RootLayout({
