@@ -242,9 +242,17 @@ class ClientAuthService {
   private getStoredUsers() {
     try {
       const usersStr = localStorage.getItem("croplink-users");
-      return usersStr ? JSON.parse(usersStr) : [];
+      console.log(
+        "🔍 Raw users from localStorage:",
+        usersStr ? "found" : "not found",
+      );
+
+      const users = usersStr ? JSON.parse(usersStr) : [];
+      console.log("📋 Parsed users:", users.length, "users found");
+
+      return users;
     } catch (error) {
-      console.error("Error getting stored users:", error);
+      console.error("❌ Error getting stored users:", error);
       return [];
     }
   }
