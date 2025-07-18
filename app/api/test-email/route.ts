@@ -1,108 +1,95 @@
-import { type NextRequest, NextResponse } from "next/server"
-import nodemailer from "nodemailer"
+import { NextRequest, NextResponse } from "next/server";
+import { sendTestEmail, verifyEmailConfiguration } from "@/lib/email-service";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name = "Test User" } = await request.json()
+    console.log("🧪 Test email API called");
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 })
+    const body = await request.json();
+    const { email } = body;
+
+    // Use default email if none provided
+    const testEmail = email || "natarajmurali56@gmail.com";
+
+    console.log(`🧪 Sending test email to: ${testEmail}`);
+
+    // Verify email service first
+    const isEmailServiceReady = await verifyEmailConfiguration();
+    if (!isEmailServiceReady) {
+      console.error("❌ Email service not ready");
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Email service is currently unavailable",
+        },
+        { status: 503 },
+      );
     }
 
-    console.log("🧪 Testing email to:", email)
-
-    // Create transporter with your Gmail
-    const transporter = nodemailer.createTransporter({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: "natarajmurali56@gmail.com",
-        pass: "msle ntny oyxr ogia",
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    })
-
-    // Verify connection
-    console.log("🔄 Verifying SMTP...")
-    await transporter.verify()
-    console.log("✅ SMTP verified")
-
     // Send test email
-    const result = await transporter.sendMail({
-      from: '"AgriApp Test" <natarajmurali56@gmail.com>',
-      to: email,
-      subject: "🧪 AgriApp Email Test",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px;">
-            <h1>🧪 Email Test Successful!</h1>
-          </div>
-          <div style="padding: 20px; border: 1px solid #ddd; margin-top: -1px;">
-            <p>Hello ${name}!</p>
-            <p>This is a test email from AgriApp. If you received this, our email system is working correctly!</p>
-            <p><strong>Test Details:</strong></p>
-            <ul>
-              <li>Sent to: ${email}</li>
-              <li>Time: ${new Date().toISOString()}</li>
-              <li>SMTP: Gmail (natarajmurali56@gmail.com)</li>
-            </ul>
-          </div>
-          <div style="background: #f8f9fa; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
-            <p>AgriApp Email Service Test</p>
-          </div>
-        </div>
-      `,
-      text: `
-Email Test Successful!
+    const result = await sendTestEmail(testEmail);
 
-Hello ${name}!
-
-This is a test email from AgriApp. If you received this, our email system is working correctly!
-
-Test Details:
-- Sent to: ${email}
-- Time: ${new Date().toISOString()}
-- SMTP: Gmail (natarajmurali56@gmail.com)
-
-AgriApp Email Service Test
-      `,
-    })
-
-    console.log("✅ Test email sent:", result.messageId)
-
-    return NextResponse.json({
-      success: true,
-      message: "Test email sent successfully!",
-      messageId: result.messageId,
-      details: {
-        to: email,
-        timestamp: new Date().toISOString(),
-      },
-    })
+    if (result.success) {
+      console.log(`✅ Test email sent successfully to ${testEmail}`);
+      return NextResponse.json({
+        success: true,
+        message: "Test email sent successfully",
+        recipient: testEmail,
+        messageId: result.messageId,
+      });
+    } else {
+      console.error(
+        `❌ Failed to send test email to ${testEmail}:`,
+        result.error,
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to send test email",
+          error: result.error,
+        },
+        { status: 500 },
+      );
+    }
   } catch (error: any) {
-    console.error("❌ Test email failed:", error)
-
+    console.error("❌ Test email API error:", error);
     return NextResponse.json(
       {
         success: false,
+        message: "Internal server error",
         error: error.message,
-        details: {
-          code: error.code,
-          command: error.command,
-          response: error.response,
-        },
       },
       { status: 500 },
-    )
+    );
   }
 }
 
+// Quick test endpoint
 export async function GET() {
-  return NextResponse.json({
-    message: "Email test endpoint",
-    usage: "POST with { email: 'test@example.com', name: 'Test User' }",
-  })
+  try {
+    console.log("🧪 Quick email service test");
+
+    // Test with default email
+    const result = await sendTestEmail("natarajmurali56@gmail.com");
+
+    return NextResponse.json({
+      service: "Test Email API",
+      status: result.success ? "working" : "failed",
+      message: result.success
+        ? "Test email sent successfully"
+        : "Failed to send test email",
+      timestamp: new Date().toISOString(),
+      error: result.success ? undefined : result.error,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        service: "Test Email API",
+        status: "error",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 },
+    );
+  }
 }
