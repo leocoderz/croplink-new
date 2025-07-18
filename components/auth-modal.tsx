@@ -295,11 +295,28 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         }
       } else {
         console.error("❌ Sign up failed:", result.message);
+
+        // Check if it's a "user already exists" error
+        const isUserExistsError = result.message?.includes("already exists");
+
         toast({
-          title: "Sign up failed",
-          description: result.message || "Please try again.",
+          title: isUserExistsError
+            ? "Account Already Exists"
+            : "Sign up failed",
+          description: isUserExistsError
+            ? "This email is already registered. Please sign in instead, or use a different email address."
+            : result.message || "Please try again.",
           variant: "destructive",
         });
+
+        // If user already exists, automatically switch to sign-in tab
+        if (isUserExistsError) {
+          setTimeout(() => {
+            setActiveTab("signin");
+            // Pre-fill the email in sign-in form
+            setSignInData((prev) => ({ ...prev, email: signUpData.email }));
+          }, 2000);
+        }
       }
     } catch (error: any) {
       console.error("❌ Sign up error:", error);
