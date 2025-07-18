@@ -317,30 +317,37 @@ export default function CropLinkApp() {
 
     console.log("🚀 Starting app initialization...");
 
-    try {
-      // Check for existing user
-      const authData = clientAuthService.getCurrentUser();
-      console.log("🔍 Auth check result:", authData);
+    // Use a flag to prevent multiple initializations
+    let isInitialized = false;
 
-      if (authData.isAuthenticated && authData.user) {
-        console.log("✅ Found user:", authData.user.name);
-        setUser(authData.user);
-        setShowAuthModal(false);
-      } else {
-        console.log("ℹ️ No user - showing auth");
+    if (!isInitialized) {
+      isInitialized = true;
+
+      try {
+        // Check for existing user
+        const authData = clientAuthService.getCurrentUser();
+        console.log("🔍 Auth check result:", authData);
+
+        if (authData.isAuthenticated && authData.user) {
+          console.log("✅ Found user:", authData.user.name);
+          setUser(authData.user);
+          setShowAuthModal(false);
+        } else {
+          console.log("ℹ️ No user - showing auth");
+          setUser(null);
+          setShowAuthModal(true);
+        }
+      } catch (error) {
+        console.error("❌ Init error:", error);
         setUser(null);
         setShowAuthModal(true);
       }
-    } catch (error) {
-      console.error("❌ Init error:", error);
-      setUser(null);
-      setShowAuthModal(true);
-    }
 
-    // Always complete initialization
-    console.log("✅ Setting app ready");
-    setIsLoading(false);
-    setIsAppReady(true);
+      // Always complete initialization
+      console.log("✅ Setting app ready");
+      setIsLoading(false);
+      setIsAppReady(true);
+    }
   }, [isMounted]);
 
   const handleAuthSuccess = useCallback(
