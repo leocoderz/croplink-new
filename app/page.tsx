@@ -311,11 +311,19 @@ export default function CropLinkApp() {
       setIsLoading(true);
 
       try {
+        // Initialize auth service first
+        clientAuthService.init();
+
         // Small delay for smooth loading animation
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Check for saved user data using client auth service
         const authData = clientAuthService.getCurrentUser();
+        console.log("🔍 Auth data check:", {
+          isAuthenticated: authData.isAuthenticated,
+          hasUser: !!authData.user,
+          userName: authData.user?.name,
+        });
 
         if (authData.isAuthenticated && authData.user) {
           console.log("✅ Found authenticated user:", authData.user.name);
@@ -328,7 +336,7 @@ export default function CropLinkApp() {
             type: "success",
           });
         } else {
-          console.log("ℹ️ No authenticated user found");
+          console.log("ℹ️ No authenticated user found - showing auth modal");
           setUser(null);
           setShowAuthModal(true);
         }
@@ -337,6 +345,7 @@ export default function CropLinkApp() {
         setUser(null);
         setShowAuthModal(true);
       } finally {
+        console.log("🏁 Initialization complete - setting ready states");
         setIsLoading(false);
         setIsAppReady(true);
       }
