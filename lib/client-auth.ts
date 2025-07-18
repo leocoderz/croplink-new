@@ -256,6 +256,37 @@ class ClientAuthService {
     this.getStoredUsers();
   }
 
+  // Send welcome email after successful signup
+  private async sendWelcomeEmail(email: string, name: string) {
+    try {
+      console.log(`📧 Sending welcome email to ${email}...`);
+
+      const response = await fetch(`${this.baseUrl}/api/send-welcome-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, name }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log(`✅ Welcome email sent successfully to ${email}`);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.error(
+          `❌ Failed to send welcome email to ${email}:`,
+          result.message,
+        );
+        return { success: false, error: result.message };
+      }
+    } catch (error: any) {
+      console.error(`❌ Welcome email error for ${email}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Helper method to get stored users from localStorage
   private getStoredUsers() {
     // Prevent SSR access to localStorage
