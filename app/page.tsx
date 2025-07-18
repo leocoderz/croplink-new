@@ -348,10 +348,14 @@ export default function CropLinkApp() {
   const handleAuthSuccess = useCallback(
     (userData: any) => {
       console.log("🎉 Authentication successful:", userData);
+      console.log("🔄 Setting user state:", userData);
+      console.log("🔄 Current showAuthModal state:", showAuthModal);
 
       setUser(userData);
       setShowAuthModal(false);
       setIsAppReady(true);
+
+      console.log("✅ User state updated, modal should close");
 
       // Add welcome notification
       addNotification({
@@ -360,7 +364,7 @@ export default function CropLinkApp() {
         type: "success",
       });
     },
-    [addNotification],
+    [addNotification, showAuthModal],
   );
 
   const handleLogout = useCallback(() => {
