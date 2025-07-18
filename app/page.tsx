@@ -306,16 +306,13 @@ export default function CropLinkApp() {
 
   // Initialize app and check authentication
   useEffect(() => {
-    const initializeApp = async () => {
+    const initializeApp = () => {
       console.log("🚀 Initializing CropLink app...");
-      setIsLoading(true);
 
       try {
         // Initialize auth service first
+        console.log("🔧 Initializing auth service...");
         clientAuthService.init();
-
-        // Small delay for smooth loading animation
-        await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Check for saved user data using client auth service
         const authData = clientAuthService.getCurrentUser();
@@ -344,14 +341,15 @@ export default function CropLinkApp() {
         console.error("❌ App initialization error:", error);
         setUser(null);
         setShowAuthModal(true);
-      } finally {
-        console.log("🏁 Initialization complete - setting ready states");
-        setIsLoading(false);
-        setIsAppReady(true);
       }
+
+      console.log("🏁 Initialization complete - setting ready states");
+      setIsLoading(false);
+      setIsAppReady(true);
     };
 
-    initializeApp();
+    // Add small delay to ensure DOM is ready
+    setTimeout(initializeApp, 100);
   }, [addNotification]);
 
   const handleAuthSuccess = useCallback(
