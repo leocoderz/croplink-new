@@ -34,9 +34,10 @@ class ClientAuthService {
 
       // Check if user already exists (simulate database check)
       const existingUsers = this.getStoredUsers();
-      const existingUser = existingUsers.find(
-        (u) => u.email === data.email.trim().toLowerCase(),
-      );
+      console.log("👥 Checking against existing users:", existingUsers.length);
+
+      const searchEmail = data.email.trim().toLowerCase();
+      const existingUser = existingUsers.find((u) => u.email === searchEmail);
 
       if (existingUser) {
         throw new Error("An account with this email already exists");
@@ -46,21 +47,26 @@ class ClientAuthService {
       const newUser = {
         id: `user_${Date.now()}`,
         name: data.name.trim(),
-        email: data.email.trim().toLowerCase(),
+        email: searchEmail,
         phone: data.phone?.trim() || null,
         createdAt: new Date().toISOString(),
       };
 
+      console.log("👤 Creating new user:", newUser);
+
       // Store user credentials (in a real app, password would be hashed on server)
       const hashedPassword = btoa(data.password); // Simple encoding for demo
-      const userCredentials = {
-        email: newUser.email,
-        password: hashedPassword,
-      };
 
       // Store user in local storage (simulate database)
-      existingUsers.push({ ...newUser, password: hashedPassword });
+      const newUserWithPassword = { ...newUser, password: hashedPassword };
+      existingUsers.push(newUserWithPassword);
+
+      console.log("💾 Storing users to localStorage:", existingUsers.length);
       localStorage.setItem("croplink-users", JSON.stringify(existingUsers));
+
+      // Verify storage worked
+      const verifyUsers = this.getStoredUsers();
+      console.log("✅ Verification - stored users count:", verifyUsers.length);
 
       // Generate token (simple demo token)
       const token = `token_${newUser.id}_${Date.now()}`;
