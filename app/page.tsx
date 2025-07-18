@@ -1,38 +1,51 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { MessageCircle, Cloud, Leaf, BarChart3, Building2, Bell, Search, User, X, ChevronRight } from "lucide-react"
-import { BottomNavigation } from "@/components/bottom-navigation"
-import { WeatherWidget } from "@/components/weather-widget"
-import { ChatBot } from "@/components/chatbot"
-import { DiseasePredictor } from "@/components/disease-predictor"
-import { DataAnalysis } from "@/components/data-analysis"
-import { GovernmentSchemes } from "@/components/government-schemes"
-import { useLanguage } from "@/contexts/language-context"
-import { AuthModal } from "@/components/auth-modal"
-import { UserProfile } from "@/components/user-profile"
-import { FarmSetupModal } from "@/components/farm-setup-modal"
-import { clientAuthService } from "@/lib/client-auth"
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  MessageCircle,
+  Cloud,
+  Leaf,
+  BarChart3,
+  Building2,
+  Bell,
+  Search,
+  User,
+  X,
+  ChevronRight,
+} from "lucide-react";
+import { BottomNavigation } from "@/components/bottom-navigation";
+import { WeatherWidget } from "@/components/weather-widget";
+import { ChatBot } from "@/components/chatbot";
+import { DiseasePredictor } from "@/components/disease-predictor";
+import { DataAnalysis } from "@/components/data-analysis";
+import { GovernmentSchemes } from "@/components/government-schemes";
+import { useLanguage } from "@/contexts/language-context";
+import { AuthModal } from "@/components/auth-modal";
+import { UserProfile } from "@/components/user-profile";
+import { FarmSetupModal } from "@/components/farm-setup-modal";
+import { clientAuthService } from "@/lib/client-auth";
 
 export default function CropLinkApp() {
-  const [activeTab, setActiveTab] = useState("home")
-  const [notifications, setNotifications] = useState(0)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [notificationsList, setNotificationsList] = useState<any[]>([])
+  // Removed debug log to prevent console spam;
+  const [activeTab, setActiveTab] = useState("home");
+  const [notifications, setNotifications] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
 
-  const { t } = useLanguage()
+  const { t } = useLanguage();
 
-  const [user, setUser] = useState<any>(null)
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [isAppReady, setIsAppReady] = useState(false)
-  const [showUserProfile, setShowUserProfile] = useState(false)
-  const [showSignOutMessage, setShowSignOutMessage] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showSignOutMessage, setShowSignOutMessage] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Real Farm Data State - Load from localStorage and sync with analytics
   const [farmData, setFarmData] = useState({
@@ -63,19 +76,19 @@ export default function CropLinkApp() {
     laborers: 0,
     machinery: [],
     challenges: [],
-  })
+  });
 
   // Add state for farm setup
-  const [showFarmSetup, setShowFarmSetup] = useState(false)
-  const [isFirstTime, setIsFirstTime] = useState(true)
+  const [showFarmSetup, setShowFarmSetup] = useState(false);
+  const [isFirstTime, setIsFirstTime] = useState(true);
 
   // Load real farm data from localStorage and sync with analytics data
   const loadFarmData = useCallback(() => {
     try {
-      const savedFarmData = localStorage.getItem("croplink-farm-data")
+      const savedFarmData = localStorage.getItem("croplink-farm-data");
       if (savedFarmData) {
-        const data = JSON.parse(savedFarmData)
-        console.log("🏠 Loading complete farm data:", data)
+        const data = JSON.parse(savedFarmData);
+        console.log("🏠 Loading complete farm data:", data);
 
         // Ensure all required fields exist with defaults
         const completeData = {
@@ -109,10 +122,10 @@ export default function CropLinkApp() {
           totalYield: data.totalYield || "0 tons",
           efficiency: data.efficiency || 0,
           isSetup: data.isSetup || false,
-        }
+        };
 
-        setFarmData(completeData)
-        setIsFirstTime(!completeData.isSetup)
+        setFarmData(completeData);
+        setIsFirstTime(!completeData.isSetup);
 
         console.log("✅ Complete farm data loaded:", {
           isSetup: completeData.isSetup,
@@ -123,125 +136,138 @@ export default function CropLinkApp() {
           cropTypes: completeData.cropTypes,
           healthScore: completeData.healthScore,
           efficiency: completeData.efficiency,
-        })
+        });
 
-        return completeData
+        return completeData;
       } else {
-        console.log("ℹ️ No saved farm data found")
-        setIsFirstTime(true)
-        return null
+        console.log("ℹ️ No saved farm data found");
+        setIsFirstTime(true);
+        return null;
       }
     } catch (error) {
-      console.error("❌ Failed to load farm data:", error)
-      setIsFirstTime(true)
-      return null
+      console.error("❌ Failed to load farm data:", error);
+      setIsFirstTime(true);
+      return null;
     }
-  }, [])
+  }, []);
 
   // Save farm data to localStorage
   const saveFarmData = useCallback((data: any) => {
     try {
-      localStorage.setItem("croplink-farm-data", JSON.stringify(data))
-      console.log("💾 Farm data saved:", data.farmName)
+      localStorage.setItem("croplink-farm-data", JSON.stringify(data));
+      console.log("💾 Farm data saved:", data.farmName);
     } catch (error) {
-      console.error("❌ Failed to save farm data:", error)
+      console.error("❌ Failed to save farm data:", error);
     }
-  }, [])
+  }, []);
 
   // Listen for farm data updates from analytics component
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "croplink-farm-data" && e.newValue) {
         try {
-          const updatedData = JSON.parse(e.newValue)
-          console.log("🔄 Farm data updated from analytics:", updatedData.farmName)
-          setFarmData(updatedData)
-          setIsFirstTime(!updatedData.isSetup)
+          const updatedData = JSON.parse(e.newValue);
+          console.log(
+            "🔄 Farm data updated from analytics:",
+            updatedData.farmName,
+          );
+          setFarmData(updatedData);
+          setIsFirstTime(!updatedData.isSetup);
         } catch (error) {
-          console.error("❌ Failed to parse updated farm data:", error)
+          console.error("❌ Failed to parse updated farm data:", error);
         }
       }
-    }
+    };
 
-    window.addEventListener("storage", handleStorageChange)
-    return () => window.removeEventListener("storage", handleStorageChange)
-  }, [])
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   // Load real farm data on component mount
   useEffect(() => {
-    loadFarmData()
-  }, [loadFarmData])
+    loadFarmData();
+  }, [loadFarmData]);
 
   // Update farm data periodically with realistic variations (only if setup)
   useEffect(() => {
     const updateFarmData = () => {
-      if (!farmData.isSetup) return // Don't update if not setup
+      if (!farmData.isSetup) return; // Don't update if not setup
 
       setFarmData((prev) => {
         // Only make small realistic changes to calculated metrics
+        const randomSeed = (Date.now() % 1000) / 1000; // Deterministic pseudo-random
         const updated = {
           ...prev,
-          soilMoisture: Math.max(30, Math.min(95, prev.soilMoisture + (Math.random() - 0.5) * 3)),
-          healthScore: Math.max(60, Math.min(100, prev.healthScore + (Math.random() - 0.5) * 2)),
-          efficiency: Math.max(60, Math.min(100, prev.efficiency + (Math.random() - 0.5) * 1.5)),
+          soilMoisture: Math.max(
+            30,
+            Math.min(95, prev.soilMoisture + (randomSeed - 0.5) * 3),
+          ),
+          healthScore: Math.max(
+            60,
+            Math.min(100, prev.healthScore + (randomSeed - 0.5) * 2),
+          ),
+          efficiency: Math.max(
+            60,
+            Math.min(100, prev.efficiency + (randomSeed - 0.5) * 1.5),
+          ),
           lastUpdated: new Date().toISOString(),
-        }
+        };
 
         // Save updated data
-        saveFarmData(updated)
-        return updated
-      })
-    }
+        saveFarmData(updated);
+        return updated;
+      });
+    };
 
     // Only update if farm is setup
     if (farmData.isSetup) {
-      const interval = setInterval(updateFarmData, 60000) // Update every minute for demo
-      return () => clearInterval(interval)
+      const interval = setInterval(updateFarmData, 60000); // Update every minute for demo
+      return () => clearInterval(interval);
     }
-  }, [farmData.isSetup, saveFarmData])
+  }, [farmData.isSetup, saveFarmData]);
 
   // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 60000)
-    return () => clearInterval(timer)
-  }, [])
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Get dynamic greeting based on time
   const getGreeting = () => {
-    const hour = currentTime.getHours()
+    const hour = currentTime.getHours();
     if (hour < 12) {
-      return "Good Morning"
+      return "Good Morning";
     } else if (hour < 17) {
-      return "Good Afternoon"
+      return "Good Afternoon";
     } else {
-      return "Good Evening"
+      return "Good Evening";
     }
-  }
+  };
 
   // Load real notifications from localStorage or API
   useEffect(() => {
     const loadNotifications = () => {
-      const savedNotifications = localStorage.getItem("croplink-notifications")
+      const savedNotifications = localStorage.getItem("croplink-notifications");
       if (savedNotifications) {
         try {
-          const notifications = JSON.parse(savedNotifications)
-          setNotificationsList(notifications)
-          setNotifications(notifications.filter((n: any) => !n.read).length)
+          const notifications = JSON.parse(savedNotifications);
+          setNotificationsList(notifications);
+          setNotifications(notifications.filter((n: any) => !n.read).length);
         } catch (error) {
-          console.error("Failed to load notifications:", error)
-          setNotificationsList([])
-          setNotifications(0)
+          console.error("Failed to load notifications:", error);
+          setNotificationsList([]);
+          setNotifications(0);
         }
       } else {
         // Initialize with empty notifications
-        setNotificationsList([])
-        setNotifications(0)
+        setNotificationsList([]);
+        setNotifications(0);
       }
-    }
-    loadNotifications()
-  }, [])
+    };
+    loadNotifications();
+  }, []);
 
   // Add notification function with useCallback to prevent infinite loops
   const addNotification = useCallback((notification: any) => {
@@ -250,123 +276,129 @@ export default function CropLinkApp() {
       ...notification,
       time: new Date().toISOString(),
       read: false,
-    }
+    };
 
     setNotificationsList((prevNotifications) => {
-      const updatedNotifications = [newNotification, ...prevNotifications]
-      localStorage.setItem("croplink-notifications", JSON.stringify(updatedNotifications))
-      return updatedNotifications
-    })
+      const updatedNotifications = [newNotification, ...prevNotifications];
+      localStorage.setItem(
+        "croplink-notifications",
+        JSON.stringify(updatedNotifications),
+      );
+      return updatedNotifications;
+    });
 
-    setNotifications((prevCount) => prevCount + 1)
-  }, [])
+    setNotifications((prevCount) => prevCount + 1);
+  }, []);
 
   // Mark notification as read
   const markNotificationRead = useCallback((id: number) => {
     setNotificationsList((prevNotifications) => {
-      const updatedNotifications = prevNotifications.map((n) => (n.id === id ? { ...n, read: true } : n))
-      localStorage.setItem("croplink-notifications", JSON.stringify(updatedNotifications))
-      return updatedNotifications
-    })
+      const updatedNotifications = prevNotifications.map((n) =>
+        n.id === id ? { ...n, read: true } : n,
+      );
+      localStorage.setItem(
+        "croplink-notifications",
+        JSON.stringify(updatedNotifications),
+      );
+      return updatedNotifications;
+    });
 
-    setNotifications((prevCount) => Math.max(0, prevCount - 1))
-  }, [])
+    setNotifications((prevCount) => Math.max(0, prevCount - 1));
+  }, []);
 
-  // Initialize app and check authentication
+  // Handle client-side mounting to prevent hydration issues
+  // Handle client-side mounting and initialization in one effect
   useEffect(() => {
-    const initializeApp = async () => {
-      console.log("🚀 Initializing CropLink app...")
-      setIsLoading(true)
+    console.log("🚀 Starting app initialization...");
 
-      try {
-        // Small delay for smooth loading animation
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+    // Set mounted state
+    setIsMounted(true);
 
-        // Check for saved user data using client auth service
-        const authData = clientAuthService.getCurrentUser()
+    try {
+      // Check for existing user
+      const authData = clientAuthService.getCurrentUser();
+      console.log("🔍 Auth check result:", authData);
 
-        if (authData.isAuthenticated && authData.user) {
-          console.log("✅ Found authenticated user:", authData.user.name)
-          setUser(authData.user)
-          setShowAuthModal(false)
-
-          addNotification({
-            title: "Welcome back!",
-            message: `Hello ${authData.user.name}, welcome back to CropLink.`,
-            type: "success",
-          })
-        } else {
-          console.log("ℹ️ No authenticated user found")
-          setUser(null)
-          setShowAuthModal(true)
-        }
-      } catch (error) {
-        console.error("❌ App initialization error:", error)
-        setUser(null)
-        setShowAuthModal(true)
-      } finally {
-        setIsLoading(false)
-        setIsAppReady(true)
+      if (authData.isAuthenticated && authData.user) {
+        console.log("✅ Found user:", authData.user.name);
+        setUser(authData.user);
+        setShowAuthModal(false);
+      } else {
+        console.log("ℹ️ No user - showing auth");
+        setUser(null);
+        setShowAuthModal(true);
       }
+    } catch (error) {
+      console.error("❌ Init error:", error);
+      setUser(null);
+      setShowAuthModal(true);
     }
 
-    initializeApp()
-  }, [addNotification])
+    // Always complete initialization
+    console.log("✅ Setting app ready");
+    setIsLoading(false);
+    setIsAppReady(true);
+  }, []); // Empty dependency array - run only once
 
   const handleAuthSuccess = useCallback(
     (userData: any) => {
-      console.log("🎉 Authentication successful:", userData)
+      console.log("🎉 Authentication successful:", userData);
+      console.log("🔄 Setting user and closing modal...");
 
-      setUser(userData)
-      setShowAuthModal(false)
-      setIsAppReady(true)
+      // Set user state - this will trigger the main app to render
+      setUser(userData);
+      setShowAuthModal(false);
+      setIsLoading(false);
+      setIsAppReady(true);
+
+      console.log("✅ Auth success handled - app should render");
 
       // Add welcome notification
       addNotification({
         title: "Welcome to CropLink!",
         message: `Hello ${userData.name}, welcome to your agricultural companion.`,
         type: "success",
-      })
+      });
     },
     [addNotification],
-  )
+  );
 
   const handleLogout = useCallback(() => {
-    console.log("🚪 Starting logout process...")
+    console.log("🚪 Starting logout process...");
 
     // Use client auth service to logout
-    clientAuthService.logout()
+    clientAuthService.logout();
 
     // Reset all state
-    setUser(null)
-    setShowUserProfile(false)
-    setActiveTab("home")
-    setNotifications(0)
-    setNotificationsList([])
-    setSearchQuery("")
-    setSearchResults([])
-    setShowNotifications(false)
+    setUser(null);
+    setShowUserProfile(false);
+    setActiveTab("home");
+    setNotifications(0);
+    setNotificationsList([]);
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowNotifications(false);
 
     // Show sign out message
-    setShowSignOutMessage(true)
+    setShowSignOutMessage(true);
 
     // After 2 seconds, show auth modal
     setTimeout(() => {
-      setShowSignOutMessage(false)
-      setShowAuthModal(true)
-      setIsAppReady(true)
-    }, 2000)
+      setShowSignOutMessage(false);
+      setShowAuthModal(true);
+      setIsAppReady(true);
+    }, 2000);
 
-    console.log("✅ Logout completed")
-  }, [])
+    console.log("✅ Logout completed");
+  }, []);
 
   const handleUserClick = useCallback(() => {
     if (user) {
-      setShowUserProfile(true)
+      setShowUserProfile(true);
     } else {
-      setShowAuthModal(true)
+      setShowAuthModal(true);
     }
-  }, [user])
+  }, [user]);
 
   const features = [
     {
@@ -394,7 +426,14 @@ export default function CropLinkApp() {
       icon: Leaf,
       color: "bg-gradient-to-br from-green-500 to-green-600",
       badge: "AI Powered",
-      keywords: ["disease", "crop", "plant", "health", "diagnosis", "treatment"],
+      keywords: [
+        "disease",
+        "crop",
+        "plant",
+        "health",
+        "diagnosis",
+        "treatment",
+      ],
     },
     {
       id: "analysis",
@@ -403,7 +442,14 @@ export default function CropLinkApp() {
       icon: BarChart3,
       color: "bg-gradient-to-br from-purple-500 to-purple-600",
       badge: "Insights",
-      keywords: ["analytics", "data", "insights", "yield", "performance", "metrics"],
+      keywords: [
+        "analytics",
+        "data",
+        "insights",
+        "yield",
+        "performance",
+        "metrics",
+      ],
     },
     {
       id: "schemes",
@@ -412,50 +458,63 @@ export default function CropLinkApp() {
       icon: Building2,
       color: "bg-gradient-to-br from-orange-500 to-orange-600",
       badge: "Benefits",
-      keywords: ["government", "schemes", "subsidy", "loan", "benefits", "programs"],
+      keywords: [
+        "government",
+        "schemes",
+        "subsidy",
+        "loan",
+        "benefits",
+        "programs",
+      ],
     },
-  ]
+  ];
 
   // Search functionality
   useEffect(() => {
     if (searchQuery.trim()) {
-      setIsSearching(true)
+      setIsSearching(true);
       const timer = setTimeout(() => {
         const results = features.filter(
           (feature) =>
             feature.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            feature.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            feature.keywords.some((keyword) => keyword.includes(searchQuery.toLowerCase())),
-        )
-        setSearchResults(results)
-        setIsSearching(false)
-      }, 300)
-      return () => clearTimeout(timer)
+            feature.description
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            feature.keywords.some((keyword) =>
+              keyword.includes(searchQuery.toLowerCase()),
+            ),
+        );
+        setSearchResults(results);
+        setIsSearching(false);
+      }, 300);
+      return () => clearTimeout(timer);
     } else {
-      setSearchResults([])
-      setIsSearching(false)
+      setSearchResults([]);
+      setIsSearching(false);
     }
-  }, [searchQuery])
+  }, [searchQuery]);
 
   const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query)
-  }, [])
+    setSearchQuery(query);
+  }, []);
 
   const clearSearch = useCallback(() => {
-    setSearchQuery("")
-    setSearchResults([])
-  }, [])
+    setSearchQuery("");
+    setSearchResults([]);
+  }, []);
 
   const formatNotificationTime = useCallback((timeString: string) => {
-    const time = new Date(timeString)
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60))
+    const time = new Date(timeString);
+    const now = new Date();
+    const diffInMinutes = Math.floor(
+      (now.getTime() - time.getTime()) / (1000 * 60),
+    );
 
-    if (diffInMinutes < 1) return "Just now"
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
-    return `${Math.floor(diffInMinutes / 1440)}d ago`
-  }, [])
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -464,31 +523,31 @@ export default function CropLinkApp() {
           <div className="h-[calc(100vh-140px)] overflow-hidden">
             <ChatBot onNotification={addNotification} />
           </div>
-        )
+        );
       case "weather":
         return (
           <div className="h-[calc(100vh-140px)] overflow-y-auto">
             <WeatherWidget onNotification={addNotification} />
           </div>
-        )
+        );
       case "disease":
         return (
           <div className="h-[calc(100vh-140px)] overflow-y-auto">
             <DiseasePredictor onNotification={addNotification} />
           </div>
-        )
+        );
       case "analysis":
         return (
           <div className="h-[calc(100vh-140px)] overflow-y-auto">
             <DataAnalysis onNotification={addNotification} />
           </div>
-        )
+        );
       case "schemes":
         return (
           <div className="h-[calc(100vh-140px)] overflow-y-auto">
             <GovernmentSchemes onNotification={addNotification} />
           </div>
-        )
+        );
       default:
         return (
           <div className="h-[calc(100vh-140px)] overflow-y-auto">
@@ -500,7 +559,9 @@ export default function CropLinkApp() {
                     {getGreeting()}
                   </h1>
                   {user && (
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Welcome back, {user.name}!</p>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                      Welcome back, {user.name}!
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -543,9 +604,13 @@ export default function CropLinkApp() {
                               <div
                                 key={notification.id}
                                 className={`p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                                  !notification.read ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                                  !notification.read
+                                    ? "bg-blue-50 dark:bg-blue-900/20"
+                                    : ""
                                 }`}
-                                onClick={() => markNotificationRead(notification.id)}
+                                onClick={() =>
+                                  markNotificationRead(notification.id)
+                                }
                               >
                                 <div className="flex items-start space-x-3">
                                   <div
@@ -567,7 +632,9 @@ export default function CropLinkApp() {
                                       {notification.message}
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-gray-500">
-                                      {formatNotificationTime(notification.time)}
+                                      {formatNotificationTime(
+                                        notification.time,
+                                      )}
                                     </p>
                                   </div>
                                 </div>
@@ -576,7 +643,9 @@ export default function CropLinkApp() {
                           ) : (
                             <div className="p-6 sm:p-8 text-center">
                               <Bell className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-3" />
-                              <p className="text-gray-500 dark:text-gray-400">No notifications</p>
+                              <p className="text-gray-500 dark:text-gray-400">
+                                No notifications
+                              </p>
                               <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">
                                 We'll notify you about important updates
                               </p>
@@ -634,7 +703,9 @@ export default function CropLinkApp() {
             {searchQuery && (
               <div className="px-3 sm:px-4 lg:px-6">
                 <div className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
-                  {isSearching ? "Searching..." : `${searchResults.length} Results`}
+                  {isSearching
+                    ? "Searching..."
+                    : `${searchResults.length} Results`}
                 </div>
                 {isSearching ? (
                   <div className="flex items-center justify-center py-8 sm:py-12">
@@ -643,18 +714,20 @@ export default function CropLinkApp() {
                 ) : searchResults.length > 0 ? (
                   <div className="space-y-2">
                     {searchResults.map((feature, index) => {
-                      const IconComponent = feature.icon
+                      const IconComponent = feature.icon;
                       return (
                         <div
                           key={feature.id}
                           className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95"
                           onClick={() => {
-                            setActiveTab(feature.id)
-                            clearSearch()
+                            setActiveTab(feature.id);
+                            clearSearch();
                           }}
                         >
                           <div className="flex items-center space-x-3 sm:space-x-4">
-                            <div className={`p-2 sm:p-3 rounded-xl ${feature.color} shadow-lg`}>
+                            <div
+                              className={`p-2 sm:p-3 rounded-xl ${feature.color} shadow-lg`}
+                            >
                               <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -668,12 +741,14 @@ export default function CropLinkApp() {
                             <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 ) : (
                   <div className="text-center py-8 sm:py-12">
-                    <p className="text-gray-500 dark:text-gray-400">No results found</p>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      No results found
+                    </p>
                   </div>
                 )}
               </div>
@@ -690,20 +765,31 @@ export default function CropLinkApp() {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-2xl sm:text-3xl font-bold mb-2">
-                            {Math.round(25 + Math.random() * 10)}°C
+                            {isMounted
+                              ? Math.round(25 + (Date.now() % 10000) / 1000)
+                              : 28}
+                            °C
                           </div>
                           <div className="text-blue-100 font-medium mb-1 text-sm sm:text-base">
                             {farmData.weatherCondition !== "Unknown"
                               ? farmData.weatherCondition
-                              : ["Sunny", "Partly Cloudy", "Clear"][Math.floor(Math.random() * 3)]}
+                              : isMounted
+                                ? ["Sunny", "Partly Cloudy", "Clear"][
+                                    Math.floor((Date.now() % 3000) / 1000)
+                                  ]
+                                : "Sunny"}
                           </div>
-                          <div className="text-blue-200 text-xs sm:text-sm">Perfect for farming</div>
+                          <div className="text-blue-200 text-xs sm:text-sm">
+                            Perfect for farming
+                          </div>
                         </div>
                         <div className="text-right">
                           <div className="bg-white/20 p-2 sm:p-3 rounded-full backdrop-blur-sm mb-2">
                             <Cloud className="h-6 w-6 sm:h-8 sm:w-8" />
                           </div>
-                          <div className="text-blue-200 text-xs sm:text-sm">{currentTime.toLocaleDateString()}</div>
+                          <div className="text-blue-200 text-xs sm:text-sm">
+                            {currentTime.toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -713,11 +799,18 @@ export default function CropLinkApp() {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-2xl sm:text-3xl font-bold mb-2">
-                            {currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            {currentTime.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </div>
-                          <div className="text-green-100 font-medium mb-1 text-sm sm:text-base">{getGreeting()}</div>
+                          <div className="text-green-100 font-medium mb-1 text-sm sm:text-base">
+                            {getGreeting()}
+                          </div>
                           <div className="text-green-200 text-xs sm:text-sm">
-                            {notifications > 0 ? `${notifications} new updates` : "All caught up!"}
+                            {notifications > 0
+                              ? `${notifications} new updates`
+                              : "All caught up!"}
                           </div>
                         </div>
                         <div className="text-right">
@@ -726,7 +819,9 @@ export default function CropLinkApp() {
                               {farmData.activeFields || 0}
                             </span>
                           </div>
-                          <div className="text-green-200 text-xs sm:text-sm">Active fields</div>
+                          <div className="text-green-200 text-xs sm:text-sm">
+                            Active fields
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -777,8 +872,12 @@ export default function CropLinkApp() {
                         <div className="bg-white/20 p-2 rounded-lg w-fit mb-2 sm:mb-3 backdrop-blur-sm">
                           <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                         </div>
-                        <div className="font-medium mb-1 text-sm sm:text-base">{item.title}</div>
-                        <div className="text-xs sm:text-sm opacity-75">{item.subtitle}</div>
+                        <div className="font-medium mb-1 text-sm sm:text-base">
+                          {item.title}
+                        </div>
+                        <div className="text-xs sm:text-sm opacity-75">
+                          {item.subtitle}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -793,9 +892,12 @@ export default function CropLinkApp() {
                           <Leaf className="h-6 w-6 sm:h-8 sm:w-8" />
                         </div>
                         <div>
-                          <h3 className="text-base sm:text-lg font-bold mb-1">Welcome to CropLink!</h3>
+                          <h3 className="text-base sm:text-lg font-bold mb-1">
+                            Welcome to CropLink!
+                          </h3>
                           <p className="opacity-90 text-sm sm:text-base">
-                            Set up your farm profile to get personalized insights
+                            Set up your farm profile to get personalized
+                            insights
                           </p>
                         </div>
                       </div>
@@ -812,7 +914,9 @@ export default function CropLinkApp() {
                 {/* Farm Status - Using Real Data from Analytics Setup */}
                 <div className="px-3 sm:px-4 lg:px-6 mt-4 sm:mt-6">
                   <div className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
-                    {farmData.isSetup ? `${farmData.farmName} Status` : "Farm Status"}
+                    {farmData.isSetup
+                      ? `${farmData.farmName} Status`
+                      : "Farm Status"}
                   </div>
                   <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
@@ -841,7 +945,9 @@ export default function CropLinkApp() {
                         </div>
                         {farmData.isSetup && (
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {new Date(farmData.lastUpdated).toLocaleTimeString()}
+                            {new Date(
+                              farmData.lastUpdated,
+                            ).toLocaleTimeString()}
                           </div>
                         )}
                       </div>
@@ -855,19 +961,25 @@ export default function CropLinkApp() {
                             <div className="text-xl sm:text-2xl font-bold text-green-600 mb-1">
                               {farmData.cropsGrowing}
                             </div>
-                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Crops Growing</div>
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                              Crops Growing
+                            </div>
                           </div>
                           <div className="text-center">
                             <div className="text-xl sm:text-2xl font-bold text-blue-600 mb-1">
                               {Math.round(farmData.soilMoisture)}%
                             </div>
-                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Soil Moisture</div>
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                              Soil Moisture
+                            </div>
                           </div>
                           <div className="text-center">
                             <div className="text-xl sm:text-2xl font-bold text-orange-600 mb-1">
                               {Math.round(farmData.healthScore)}%
                             </div>
-                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Health Score</div>
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                              Health Score
+                            </div>
                           </div>
                         </div>
 
@@ -875,7 +987,9 @@ export default function CropLinkApp() {
                         <div className="space-y-3 sm:space-y-4">
                           <div>
                             <div className="flex justify-between mb-2">
-                              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Soil Moisture</span>
+                              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                Soil Moisture
+                              </span>
                               <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                                 {Math.round(farmData.soilMoisture)}%
                               </span>
@@ -946,7 +1060,9 @@ export default function CropLinkApp() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div className="space-y-2 sm:space-y-3">
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Area</span>
+                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                  Total Area
+                                </span>
                                 <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                                   {farmData.totalArea} acres
                                 </span>
@@ -960,13 +1076,17 @@ export default function CropLinkApp() {
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Location</span>
+                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                  Location
+                                </span>
                                 <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate ml-2">
                                   {farmData.location || "Not set"}
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Farm Type</span>
+                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                  Farm Type
+                                </span>
                                 <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white capitalize">
                                   {farmData.farmType || "Not set"}
                                 </span>
@@ -982,23 +1102,31 @@ export default function CropLinkApp() {
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Irrigation</span>
+                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                  Irrigation
+                                </span>
                                 <span
                                   className={`text-xs sm:text-sm font-medium ${
-                                    farmData.irrigationStatus === "Active" ? "text-green-600" : "text-red-600"
+                                    farmData.irrigationStatus === "Active"
+                                      ? "text-green-600"
+                                      : "text-red-600"
                                   }`}
                                 >
                                   {farmData.irrigationStatus}
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Soil Type</span>
+                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                  Soil Type
+                                </span>
                                 <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white capitalize">
                                   {farmData.soilType || "Not set"}
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Experience</span>
+                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                  Experience
+                                </span>
                                 <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white capitalize">
                                   {farmData.farmingExperience || "Not set"}
                                 </span>
@@ -1008,23 +1136,26 @@ export default function CropLinkApp() {
                         </div>
 
                         {/* Crop Types Display */}
-                        {farmData.cropTypes && farmData.cropTypes.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Current Crops</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {farmData.cropTypes.map((crop, index) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full"
-                                >
-                                  {crop}
+                        {farmData.cropTypes &&
+                          farmData.cropTypes.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                  Current Crops
                                 </span>
-                              ))}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {farmData.cropTypes.map((crop, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full"
+                                  >
+                                    {crop}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
                         {/* Additional Farm Info */}
                         {farmData.isSetup && (
@@ -1042,29 +1173,34 @@ export default function CropLinkApp() {
                               )}
                               {farmData.laborers > 0 && (
                                 <div className="flex justify-between">
-                                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Laborers</span>
+                                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                    Laborers
+                                  </span>
                                   <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                                     {farmData.laborers}
                                   </span>
                                 </div>
                               )}
-                              {farmData.machinery && farmData.machinery.length > 0 && (
-                                <div>
-                                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 block mb-2">
-                                    Machinery
-                                  </span>
-                                  <div className="flex flex-wrap gap-1">
-                                    {farmData.machinery.map((machine, index) => (
-                                      <span
-                                        key={index}
-                                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full"
-                                      >
-                                        {machine}
-                                      </span>
-                                    ))}
+                              {farmData.machinery &&
+                                farmData.machinery.length > 0 && (
+                                  <div>
+                                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 block mb-2">
+                                      Machinery
+                                    </span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {farmData.machinery.map(
+                                        (machine, index) => (
+                                          <span
+                                            key={index}
+                                            className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-xs rounded-full"
+                                          >
+                                            {machine}
+                                          </span>
+                                        ),
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
                             </div>
                           </div>
                         )}
@@ -1076,7 +1212,8 @@ export default function CropLinkApp() {
                           <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                         </div>
                         <p className="text-gray-500 dark:text-gray-400 mb-3 sm:mb-4 text-sm sm:text-base">
-                          Complete your farm setup to see live data and analytics
+                          Complete your farm setup to see live data and
+                          analytics
                         </p>
                         <Button
                           onClick={() => setActiveTab("analysis")}
@@ -1096,7 +1233,7 @@ export default function CropLinkApp() {
                   </div>
                   <div className="space-y-2">
                     {features.map((feature, index) => {
-                      const IconComponent = feature.icon
+                      const IconComponent = feature.icon;
                       return (
                         <div
                           key={feature.id}
@@ -1104,7 +1241,9 @@ export default function CropLinkApp() {
                           onClick={() => setActiveTab(feature.id)}
                         >
                           <div className="flex items-center space-x-3 sm:space-x-4">
-                            <div className={`p-2 sm:p-3 rounded-xl ${feature.color} shadow-lg`}>
+                            <div
+                              className={`p-2 sm:p-3 rounded-xl ${feature.color} shadow-lg`}
+                            >
                               <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1113,7 +1252,9 @@ export default function CropLinkApp() {
                                   {feature.title}
                                 </h3>
                                 <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
-                                  <span className="text-xs text-gray-600 dark:text-gray-400">{feature.badge}</span>
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                                    {feature.badge}
+                                  </span>
                                 </div>
                               </div>
                               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
@@ -1123,7 +1264,7 @@ export default function CropLinkApp() {
                             <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -1168,9 +1309,12 @@ export default function CropLinkApp() {
                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                           <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                         </div>
-                        <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">No recent activity</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                          No recent activity
+                        </p>
                         <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">
-                          Start using CropLink features to see your activity here
+                          Start using CropLink features to see your activity
+                          here
                         </p>
                       </div>
                     )}
@@ -1179,24 +1323,44 @@ export default function CropLinkApp() {
               </>
             )}
           </div>
-        )
+        );
     }
-  }
+  };
 
   // Close notifications when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showNotifications) {
-        const target = event.target as Element
+        const target = event.target as Element;
         if (!target.closest(".relative")) {
-          setShowNotifications(false)
+          setShowNotifications(false);
         }
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [showNotifications])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotifications]);
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-2xl">
+            <Leaf className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
+          </div>
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-green-500 mx-auto mb-4 sm:mb-6"></div>
+          <p className="text-xl sm:text-2xl font-bold text-gray-600 dark:text-gray-400">
+            Loading CropLink...
+          </p>
+          <p className="text-gray-500 dark:text-gray-500 mt-2 sm:mt-3 text-sm sm:text-base">
+            Your agricultural companion
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading screen while checking authentication
   if (isLoading || !isAppReady) {
@@ -1207,13 +1371,15 @@ export default function CropLinkApp() {
             <Leaf className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
           </div>
           <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-green-500 mx-auto mb-4 sm:mb-6"></div>
-          <p className="text-xl sm:text-2xl font-bold text-gray-600 dark:text-gray-400">Loading CropLink...</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-600 dark:text-gray-400">
+            Loading CropLink...
+          </p>
           <p className="text-gray-500 dark:text-gray-500 mt-2 sm:mt-3 text-sm sm:text-base">
             Your agricultural companion
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   // Show sign out message
@@ -1229,7 +1395,8 @@ export default function CropLinkApp() {
               You've Been Signed Out
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">
-              Thank you for using CropLink. You have been successfully signed out.
+              Thank you for using CropLink. You have been successfully signed
+              out.
             </p>
             <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-green-500 mx-auto"></div>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-4 sm:mt-6">
@@ -1238,7 +1405,7 @@ export default function CropLinkApp() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Show auth modal if no user is logged in
@@ -1250,16 +1417,22 @@ export default function CropLinkApp() {
             <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-2xl">
               <Leaf className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">CropLink</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
+              CropLink
+            </h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
               Your intelligent agricultural companion
             </p>
           </div>
         </div>
 
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={handleAuthSuccess} />
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
       </div>
-    )
+    );
   }
 
   return (
@@ -1274,24 +1447,21 @@ export default function CropLinkApp() {
           isOpen={showFarmSetup}
           onClose={() => setShowFarmSetup(false)}
           onSave={(data) => {
-            setFarmData(data)
-            saveFarmData(data)
-            setIsFirstTime(false)
-            setShowFarmSetup(false)
+            setFarmData(data);
+            saveFarmData(data);
+            setIsFirstTime(false);
+            setShowFarmSetup(false);
             addNotification({
               title: "Farm Setup Complete!",
               message: `Welcome to CropLink, ${data.farmName}! Your farm profile has been created.`,
               type: "success",
-            })
+            });
           }}
         />
 
         {/* Bottom Navigation */}
         <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={handleAuthSuccess} />
 
       {/* User Profile Modal */}
       {user && (
@@ -1303,5 +1473,5 @@ export default function CropLinkApp() {
         />
       )}
     </div>
-  )
+  );
 }

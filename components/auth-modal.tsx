@@ -1,37 +1,57 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Phone, ArrowLeft } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { clientAuthService } from "@/lib/client-auth"
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  ArrowLeft,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { clientAuthService } from "@/lib/client-auth";
 
 interface AuthModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onAuthSuccess: (user: any) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onAuthSuccess: (user: any) => void;
 }
 
 export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState("signin")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
-  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState("signin");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const { toast } = useToast();
 
   // Sign In Form State
   const [signInData, setSignInData] = useState({
     email: "",
     password: "",
-  })
+  });
 
   // Sign Up Form State
   const [signUpData, setSignUpData] = useState({
@@ -40,113 +60,227 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     phone: "",
     password: "",
     confirmPassword: "",
-  })
+  });
 
   // Forgot Password Form State
   const [forgotPasswordData, setForgotPasswordData] = useState({
     email: "",
-  })
+  });
 
-  const [forgotPasswordSent, setForgotPasswordSent] = useState(false)
+  const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
+
+  // Validation states
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+
+  // Validation helper functions
+  const validateEmail = (email: string) => {
+    if (!email.trim()) {
+      return "Email is required";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return "Please enter a valid email address (e.g., user@example.com)";
+    }
+    return "";
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      return "Password is required";
+    }
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return "Password must contain at least one number";
+    }
+    if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) {
+      return "Password must contain at least one special character (!@#$%^&*)";
+    }
+    return "";
+  };
+
+  const validateName = (name: string) => {
+    if (!name.trim()) {
+      return "Full name is required";
+    }
+    if (name.trim().length < 2) {
+      return "Name must be at least 2 characters long";
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      return "Name can only contain letters and spaces";
+    }
+    return "";
+  };
+
+  const validatePhone = (phone: string) => {
+    if (!phone.trim()) {
+      return "Phone number is required";
+    }
+    if (!/^\+?[\d\s\-()]{10,}$/.test(phone.trim())) {
+      return "Please enter a valid phone number (at least 10 digits)";
+    }
+    return "";
+  };
+
+  const validateConfirmPassword = (
+    password: string,
+    confirmPassword: string,
+  ) => {
+    if (!confirmPassword) {
+      return "Please confirm your password";
+    }
+    if (password !== confirmPassword) {
+      return "Passwords do not match";
+    }
+    return "";
+  };
+
+  // Clear all validation errors
+  const clearValidationErrors = () => {
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+    setNameError("");
+    setPhoneError("");
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    clearValidationErrors();
+
+    // Validate signin fields
+    const emailValidation = validateEmail(signInData.email);
+    const passwordValidation = signInData.password
+      ? ""
+      : "Password is required";
+
+    setEmailError(emailValidation);
+    setPasswordError(passwordValidation);
+
+    if (emailValidation || passwordValidation) {
+      toast({
+        title: "❌ Validation Error",
+        description: "Please fix the highlighted errors below and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      console.log("🔄 Starting sign in process...")
+      console.log("🔄 Starting sign in process...");
 
-      const result = await clientAuthService.login(signInData)
+      const result = await clientAuthService.login(signInData);
 
       if (result.success) {
-        console.log("✅ Sign in successful:", result.user)
+        console.log("✅ Sign in successful:", result.user);
 
         toast({
           title: "Welcome back!",
-          description: result.message || "You have been signed in successfully.",
-        })
+          description:
+            result.message || "You have been signed in successfully.",
+        });
 
-        onAuthSuccess(result.user)
-        onClose()
+        onAuthSuccess(result.user);
+        onClose();
 
         // Reset form
-        setSignInData({ email: "", password: "" })
+        setSignInData({ email: "", password: "" });
       } else {
-        console.error("❌ Sign in failed:", result.message)
+        console.error("❌ Sign in failed:", result.message);
         toast({
           title: "Sign in failed",
-          description: result.message || "Please check your credentials and try again.",
+          description:
+            result.message || "Please check your credentials and try again.",
           variant: "destructive",
-        })
+        });
       }
     } catch (error: any) {
-      console.error("❌ Sign in error:", error)
+      console.error("❌ Sign in error:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    clearValidationErrors();
 
-    // Validate passwords match
-    if (signUpData.password !== signUpData.confirmPassword) {
+    // Validate all fields
+    const nameValidation = validateName(signUpData.name);
+    const emailValidation = validateEmail(signUpData.email);
+    const phoneValidation = validatePhone(signUpData.phone);
+    const passwordValidation = validatePassword(signUpData.password);
+    const confirmPasswordValidation = validateConfirmPassword(
+      signUpData.password,
+      signUpData.confirmPassword,
+    );
+
+    // Set individual field errors
+    setNameError(nameValidation);
+    setEmailError(emailValidation);
+    setPhoneError(phoneValidation);
+    setPasswordError(passwordValidation);
+    setConfirmPasswordError(confirmPasswordValidation);
+
+    // Check if any validation failed
+    if (
+      nameValidation ||
+      emailValidation ||
+      phoneValidation ||
+      passwordValidation ||
+      confirmPasswordValidation
+    ) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match. Please try again.",
+        title: "❌ Validation Error",
+        description: "Please fix the highlighted errors below and try again.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    // Validate password strength
-    if (signUpData.password.length < 8) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(signUpData.password)) {
-      toast({
-        title: "Password too weak",
-        description: "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      console.log("🔄 Starting sign up process...")
+      console.log("🔄 Starting sign up process...");
 
       const result = await clientAuthService.signup({
         name: signUpData.name,
         email: signUpData.email,
         phone: signUpData.phone,
         password: signUpData.password,
-      })
+      });
 
       if (result.success) {
-        console.log("✅ Sign up successful:", result.user)
+        console.log("✅ Sign up successful:", result.user);
 
         toast({
-          title: "Account created!",
-          description: result.message || "Your account has been created successfully.",
-        })
+          title: "🎉 Account created!",
+          description:
+            "Your account has been created successfully! Check your email for a welcome message.",
+        });
 
         // Auto-login after successful signup
         if (result.user) {
-          onAuthSuccess(result.user)
-          onClose()
+          console.log("🔄 Calling onAuthSuccess with user:", result.user);
+          onAuthSuccess(result.user);
+          onClose();
 
           // Reset form
           setSignUpData({
@@ -155,72 +289,100 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             phone: "",
             password: "",
             confirmPassword: "",
-          })
+          });
+        } else {
+          console.error("❌ No user returned from signup:", result);
         }
       } else {
-        console.error("❌ Sign up failed:", result.message)
+        console.error("❌ Sign up failed:", result.message);
+
+        // Check if it's a "user already exists" error
+        const isUserExistsError = result.message?.includes("already exists");
+
         toast({
-          title: "Sign up failed",
-          description: result.message || "Please try again.",
+          title: isUserExistsError
+            ? "Account Already Exists"
+            : "Sign up failed",
+          description: isUserExistsError
+            ? "This email is already registered. Please sign in instead, or use a different email address."
+            : result.message || "Please try again.",
           variant: "destructive",
-        })
+        });
+
+        // If user already exists, automatically switch to sign-in tab
+        if (isUserExistsError) {
+          setTimeout(() => {
+            setActiveTab("signin");
+            // Pre-fill the email in sign-in form
+            setSignInData((prev) => ({ ...prev, email: signUpData.email }));
+          }, 2000);
+        }
       }
     } catch (error: any) {
-      console.error("❌ Sign up error:", error)
+      console.error("❌ Sign up error:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
+      console.log(
+        "🔐 Sending password reset email to:",
+        forgotPasswordData.email,
+      );
+
+      const response = await fetch("/api/send-reset-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(forgotPasswordData),
-      })
+        body: JSON.stringify({ email: forgotPasswordData.email }),
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
-      if (response.ok) {
-        setForgotPasswordSent(true)
+      if (response.ok && result.success) {
+        setForgotPasswordSent(true);
         toast({
-          title: "Reset link sent!",
-          description: result.message || "Check your email for password reset instructions.",
-        })
+          title: "🔐 Reset link sent!",
+          description: `Password reset instructions have been sent to ${forgotPasswordData.email}. Check your inbox!`,
+        });
+        console.log("✅ Password reset email sent successfully");
       } else {
+        console.error("❌ Password reset failed:", result.message);
         toast({
           title: "Error",
-          description: result.message || "Failed to send reset email. Please try again.",
+          description:
+            result.message || "Failed to send reset email. Please try again.",
           variant: "destructive",
-        })
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Password reset error:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const resetForgotPassword = () => {
-    setShowForgotPassword(false)
-    setForgotPasswordSent(false)
-    setForgotPasswordData({ email: "" })
-  }
+    setShowForgotPassword(false);
+    setForgotPasswordSent(false);
+    setForgotPasswordData({ email: "" });
+  };
 
   if (showForgotPassword) {
     return (
@@ -228,7 +390,12 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         <DialogContent className="w-[95vw] max-w-md mx-auto bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
           <DialogHeader>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" onClick={resetForgotPassword} className="p-1 h-8 w-8">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetForgotPassword}
+                className="p-1 h-8 w-8"
+              >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -241,13 +408,17 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
             <Card className="border-0 shadow-none bg-transparent">
               <CardHeader className="space-y-1 pb-4 px-0">
                 <CardDescription className="text-center text-gray-600 dark:text-gray-400">
-                  Enter your email address and we'll send you a link to reset your password
+                  Enter your email address and we'll send you a link to reset
+                  your password
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 px-0">
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="forgot-email" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="forgot-email"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Email Address
                     </Label>
                     <div className="relative">
@@ -257,7 +428,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type="email"
                         placeholder="Enter your email"
                         value={forgotPasswordData.email}
-                        onChange={(e) => setForgotPasswordData({ email: e.target.value })}
+                        onChange={(e) =>
+                          setForgotPasswordData({ email: e.target.value })
+                        }
                         className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
                         required
                       />
@@ -286,11 +459,17 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Mail className="h-8 w-8 text-green-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Check your email</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Check your email
+                </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   We've sent a password reset link to {forgotPasswordData.email}
                 </p>
-                <Button onClick={resetForgotPassword} variant="outline" className="bg-transparent">
+                <Button
+                  onClick={resetForgotPassword}
+                  variant="outline"
+                  className="bg-transparent"
+                >
                   Back to Sign In
                 </Button>
               </CardContent>
@@ -298,7 +477,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
           )}
         </DialogContent>
       </Dialog>
-    )
+    );
   }
 
   return (
@@ -339,7 +518,10 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
               <CardContent className="space-y-4 px-0">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="signin-email"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Email
                     </Label>
                     <div className="relative">
@@ -349,14 +531,33 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type="email"
                         placeholder="Enter your email"
                         value={signInData.email}
-                        onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
-                        className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
+                        onChange={(e) => {
+                          setSignInData({
+                            ...signInData,
+                            email: e.target.value,
+                          });
+                          if (emailError) setEmailError("");
+                        }}
+                        className={`pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-base ${
+                          emailError
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-gray-300 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400"
+                        }`}
                         required
                       />
                     </div>
+                    {emailError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <span className="mr-1">⚠️</span>
+                        {emailError}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="signin-password"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Password
                     </Label>
                     <div className="relative">
@@ -366,8 +567,18 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={signInData.password}
-                        onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
-                        className="pl-10 pr-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
+                        onChange={(e) => {
+                          setSignInData({
+                            ...signInData,
+                            password: e.target.value,
+                          });
+                          if (passwordError) setPasswordError("");
+                        }}
+                        className={`pl-10 pr-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-base ${
+                          passwordError
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-gray-300 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400"
+                        }`}
                         required
                       />
                       <Button
@@ -377,9 +588,19 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
+                    {passwordError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <span className="mr-1">⚠️</span>
+                        {passwordError}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex justify-end">
@@ -419,13 +640,17 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   Create your account
                 </CardTitle>
                 <CardDescription className="text-center text-gray-600 dark:text-gray-400 text-sm">
-                  Join thousands of farmers using CropLink to optimize their farming
+                  Join thousands of farmers using CropLink to optimize their
+                  farming
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 px-0">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="signup-name"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Full Name
                     </Label>
                     <div className="relative">
@@ -435,14 +660,33 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type="text"
                         placeholder="Enter your full name"
                         value={signUpData.name}
-                        onChange={(e) => setSignUpData({ ...signUpData, name: e.target.value })}
-                        className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
+                        onChange={(e) => {
+                          setSignUpData({
+                            ...signUpData,
+                            name: e.target.value,
+                          });
+                          if (nameError) setNameError("");
+                        }}
+                        className={`pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-base ${
+                          nameError
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "border-gray-300 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400"
+                        }`}
                         required
                       />
                     </div>
+                    {nameError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <span className="mr-1">⚠️</span>
+                        {nameError}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="signup-email"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Email
                     </Label>
                     <div className="relative">
@@ -452,14 +696,22 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type="email"
                         placeholder="Enter your email"
                         value={signUpData.email}
-                        onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
+                        onChange={(e) =>
+                          setSignUpData({
+                            ...signUpData,
+                            email: e.target.value,
+                          })
+                        }
                         className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
                         required
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="signup-phone"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Phone Number
                     </Label>
                     <div className="relative">
@@ -469,14 +721,22 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type="tel"
                         placeholder="Enter your phone number"
                         value={signUpData.phone}
-                        onChange={(e) => setSignUpData({ ...signUpData, phone: e.target.value })}
+                        onChange={(e) =>
+                          setSignUpData({
+                            ...signUpData,
+                            phone: e.target.value,
+                          })
+                        }
                         className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
                         required
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="signup-password"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Password
                     </Label>
                     <div className="relative">
@@ -486,7 +746,12 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type={showPassword ? "text" : "password"}
                         placeholder="Create a password"
                         value={signUpData.password}
-                        onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                        onChange={(e) =>
+                          setSignUpData({
+                            ...signUpData,
+                            password: e.target.value,
+                          })
+                        }
                         className="pl-10 pr-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
                         required
                       />
@@ -497,12 +762,19 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-confirm-password" className="text-gray-700 dark:text-gray-300">
+                    <Label
+                      htmlFor="signup-confirm-password"
+                      className="text-gray-700 dark:text-gray-300"
+                    >
                       Confirm Password
                     </Label>
                     <div className="relative">
@@ -512,7 +784,12 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         type={showConfirmPassword ? "text" : "password"}
                         placeholder="Confirm your password"
                         value={signUpData.confirmPassword}
-                        onChange={(e) => setSignUpData({ ...signUpData, confirmPassword: e.target.value })}
+                        onChange={(e) =>
+                          setSignUpData({
+                            ...signUpData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
                         className="pl-10 pr-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 text-base"
                         required
                       />
@@ -521,9 +798,15 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         variant="ghost"
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                       >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -548,5 +831,5 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         </Tabs>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

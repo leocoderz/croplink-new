@@ -1,164 +1,193 @@
 // Client-side authentication service
 class ClientAuthService {
-  private baseUrl = typeof window !== "undefined" ? window.location.origin : ""
+  private baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
-  async signup(data: { name: string; email: string; phone?: string; password: string }) {
-    console.log("🚀 === CLIENT SIGNUP STARTED ===")
+  async signup(data: {
+    name: string;
+    email: string;
+    phone?: string;
+    password: string;
+  }) {
+    console.log("🚀 === CLIENT SIGNUP STARTED ===");
 
     try {
       // Client-side validation
-      console.log("🔍 Validating client-side data...")
+      console.log("🔍 Validating client-side data...");
 
       if (!data.name || data.name.trim().length < 2) {
-        throw new Error("Name must be at least 2 characters long")
+        throw new Error("Name must be at least 2 characters long");
       }
 
       if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-        throw new Error("Please enter a valid email address")
+        throw new Error("Please enter a valid email address");
       }
 
       if (!data.password || data.password.length < 8) {
-        throw new Error("Password must be at least 8 characters long")
+        throw new Error("Password must be at least 8 characters long");
       }
 
       if (data.phone && !/^\+?[\d\s\-()]{10,}$/.test(data.phone.trim())) {
-        throw new Error("Please enter a valid phone number")
+        throw new Error("Please enter a valid phone number");
       }
 
-      console.log("✅ Client-side validation passed")
+      console.log("✅ Client-side validation passed");
 
-      // Prepare request data
-      const requestData = {
+      // Check if user already exists (simulate database check)
+      const existingUsers = this.getStoredUsers();
+      console.log("👥 Checking against existing users:", existingUsers.length);
+
+      const searchEmail = data.email.trim().toLowerCase();
+      const existingUser = existingUsers.find((u) => u.email === searchEmail);
+
+      if (existingUser) {
+        throw new Error(
+          `⚠️ An account with the email "${data.email}" already exists. Please sign in instead or use a different email address.`,
+        );
+      }
+
+      // Create new user (simulate API response)
+      const newUser = {
+        id: `user_${Date.now()}`,
         name: data.name.trim(),
-        email: data.email.trim().toLowerCase(),
+        email: searchEmail,
         phone: data.phone?.trim() || null,
-        password: data.password,
-      }
+        createdAt: new Date().toISOString(),
+      };
 
-      console.log("📤 Sending signup request to server...")
+      console.log("👤 Creating new user:", newUser);
 
-      const response = await fetch(`${this.baseUrl}/api/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      })
+      // Store user credentials (in a real app, password would be hashed on server)
+      const hashedPassword = btoa(data.password); // Simple encoding for demo
 
-      console.log("📥 Server response received:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-      })
+      // Store user in local storage (simulate database)
+      const newUserWithPassword = { ...newUser, password: hashedPassword };
+      existingUsers.push(newUserWithPassword);
 
-      let result
-      try {
-        const responseText = await response.text()
-        console.log("📝 Raw response:", responseText.substring(0, 100) + "...")
+      console.log("💾 Storing users to localStorage:", existingUsers.length);
+      localStorage.setItem("croplink-users", JSON.stringify(existingUsers));
 
-        result = JSON.parse(responseText)
-        console.log("📝 Response parsed:", {
-          success: result.success,
-          hasUser: !!result.user,
-          hasToken: !!result.token,
-          message: result.message,
-        })
-      } catch (parseError) {
-        console.error("❌ Failed to parse response:", parseError)
-        throw new Error("Invalid response from server")
-      }
+      // Verify storage worked
+      const verifyUsers = this.getStoredUsers();
+      console.log("✅ Verification - stored users count:", verifyUsers.length);
 
-      if (!response.ok) {
-        console.error("❌ Server returned error:", {
-          status: response.status,
-          message: result.message,
-        })
-        throw new Error(result.message || `Signup failed with status ${response.status}`)
-      }
-
-      if (!result.success) {
-        console.error("❌ Signup was not successful:", result.message)
-        throw new Error(result.message || "Signup failed")
-      }
+      // Generate token (simple demo token)
+      const token = `token_${newUser.id}_${Date.now()}`;
 
       // Store user data and token for immediate login
-      if (result.user && result.token) {
-        console.log("💾 Storing user data for auto-login...")
-        this.storeUserData(result.user, result.token)
-        console.log("✅ User data stored successfully")
-      }
+      console.log("💾 Storing user data for auto-login...");
+      this.storeUserData(newUser, token);
+      console.log("✅ User data stored successfully");
 
-      console.log("🎉 Signup completed successfully!")
-      return { success: true, ...result }
+      // Send welcome email
+      console.log("📧 Sending welcome email...");
+      this.sendWelcomeEmail(newUser.email, newUser.name);
+
+      console.log("🎉 Signup completed successfully!");
+      return {
+        success: true,
+        user: newUser,
+        token,
+        message: "Account created successfully!",
+      };
     } catch (error: any) {
-      console.error("💥 CLIENT SIGNUP ERROR:", error.message)
+      console.error("💥 CLIENT SIGNUP ERROR:", error.message);
       return {
         success: false,
         message: error.message || "Signup failed. Please try again.",
-      }
+      };
     }
   }
 
   async login(data: { email: string; password: string }) {
     try {
-      console.log("🔄 Starting login process...")
+      console.log("🔄 Starting login process...");
+      console.log("📧 Login attempt for email:", data.email);
 
       // Clear any existing data first
-      this.clearUserData()
+      this.clearUserData();
 
-      const response = await fetch(`${this.baseUrl}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
+      // Get stored users (simulate database lookup)
+      const storedUsers = this.getStoredUsers();
+      console.log("👥 Found stored users:", storedUsers.length);
+      console.log(
+        "📋 Stored user emails:",
+        storedUsers.map((u) => u.email),
+      );
 
-      const result = await response.json()
+      const searchEmail = data.email.trim().toLowerCase();
+      console.log("🔍 Searching for email:", searchEmail);
 
-      if (!response.ok) {
-        throw new Error(result.message || "Login failed")
+      const user = storedUsers.find((u) => u.email === searchEmail);
+      console.log("👤 Found user:", !!user);
+
+      if (!user) {
+        console.error("❌ No user found with email:", searchEmail);
+        console.error(
+          "❌ Available emails:",
+          storedUsers.map((u) => u.email),
+        );
+        throw new Error(
+          `❌ No account found with the email "${data.email}". Please check your email address or create a new account.`,
+        );
       }
+
+      // Check password (in real app, would compare hashed passwords)
+      const providedPasswordHash = btoa(data.password);
+      if (user.password !== providedPasswordHash) {
+        throw new Error(
+          "🔐 Incorrect password. Please check your password and try again, or use 'Forgot Password' to reset it.",
+        );
+      }
+
+      // Create clean user object (without password)
+      const userInfo = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt,
+      };
+
+      // Generate new token
+      const token = `token_${user.id}_${Date.now()}`;
 
       // Store user data and token
-      if (result.user && result.token) {
-        this.storeUserData(result.user, result.token)
+      this.storeUserData(userInfo, token);
 
-        // Send login alert SMS if user has phone number
-        if (result.user.phone) {
-          this.sendLoginAlertSMS(result.user.phone, result.user.name)
-        }
-      }
-
-      console.log("✅ Login successful")
-      return { success: true, ...result }
+      console.log("✅ Login successful");
+      return {
+        success: true,
+        user: userInfo,
+        token,
+        message: "Login successful!",
+      };
     } catch (error: any) {
-      console.error("❌ Login error:", error)
-      return { success: false, message: error.message }
+      console.error("❌ Login error:", error);
+      return { success: false, message: error.message };
     }
   }
 
   private storeUserData(user: any, token: string) {
     try {
-      localStorage.setItem("agri-app-user", JSON.stringify(user))
-      localStorage.setItem("croplink-user", JSON.stringify(user))
-      localStorage.setItem("agri-app-token", token)
-      localStorage.setItem("croplink-token", token)
-      console.log("✅ User data stored in localStorage")
+      localStorage.setItem("agri-app-user", JSON.stringify(user));
+      localStorage.setItem("croplink-user", JSON.stringify(user));
+      localStorage.setItem("agri-app-token", token);
+      localStorage.setItem("croplink-token", token);
+      console.log("✅ User data stored in localStorage");
     } catch (error) {
-      console.error("❌ Failed to store user data:", error)
+      console.error("❌ Failed to store user data:", error);
     }
   }
 
   private clearUserData() {
     try {
-      localStorage.removeItem("agri-app-user")
-      localStorage.removeItem("croplink-user")
-      localStorage.removeItem("agri-app-token")
-      localStorage.removeItem("croplink-token")
-      console.log("✅ User data cleared from localStorage")
+      localStorage.removeItem("agri-app-user");
+      localStorage.removeItem("croplink-user");
+      localStorage.removeItem("agri-app-token");
+      localStorage.removeItem("croplink-token");
+      console.log("✅ User data cleared from localStorage");
     } catch (error) {
-      console.error("❌ Failed to clear user data:", error)
+      console.error("❌ Failed to clear user data:", error);
     }
   }
 
@@ -172,48 +201,149 @@ class ClientAuthService {
           message: `Hi ${name}, you've successfully signed in to AgriApp. If this wasn't you, please secure your account immediately.`,
           type: "login_alert",
         }),
-      })
+      });
     } catch (error) {
-      console.error("Failed to send login alert SMS:", error)
+      console.error("Failed to send login alert SMS:", error);
     }
   }
 
   // Get current user from localStorage
   getCurrentUser() {
+    // Prevent SSR access to localStorage
+    if (typeof window === "undefined") {
+      return {
+        user: null,
+        token: null,
+        isAuthenticated: false,
+      };
+    }
+
     try {
-      const userStr = localStorage.getItem("agri-app-user") || localStorage.getItem("croplink-user")
-      const token = localStorage.getItem("agri-app-token") || localStorage.getItem("croplink-token")
+      const userStr =
+        localStorage.getItem("agri-app-user") ||
+        localStorage.getItem("croplink-user");
+      const token =
+        localStorage.getItem("agri-app-token") ||
+        localStorage.getItem("croplink-token");
 
       if (userStr && token) {
         return {
           user: JSON.parse(userStr),
           token,
           isAuthenticated: true,
-        }
+        };
       }
 
       return {
         user: null,
         token: null,
         isAuthenticated: false,
-      }
+      };
     } catch (error) {
-      console.error("Error getting current user:", error)
+      console.error("Error getting current user:", error);
       // Clear corrupted data
-      this.clearUserData()
+      this.clearUserData();
       return {
         user: null,
         token: null,
         isAuthenticated: false,
-      }
+      };
     }
   }
 
   // Logout user
   logout() {
-    this.clearUserData()
-    console.log("✅ User logged out from client auth service")
+    this.clearUserData();
+    console.log("✅ User logged out from client auth service");
+  }
+
+  // Initialize auth service (creates test user if needed)
+  init() {
+    this.getStoredUsers();
+  }
+
+  // Send welcome email after successful signup
+  private async sendWelcomeEmail(email: string, name: string) {
+    try {
+      console.log(`📧 Sending welcome email to ${email}...`);
+
+      const response = await fetch(`${this.baseUrl}/api/send-welcome-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, name }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log(`✅ Welcome email sent successfully to ${email}`);
+        return { success: true, messageId: result.messageId };
+      } else {
+        console.error(
+          `❌ Failed to send welcome email to ${email}:`,
+          result.message,
+        );
+        return { success: false, error: result.message };
+      }
+    } catch (error: any) {
+      console.error(`❌ Welcome email error for ${email}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Helper method to get stored users from localStorage
+  private getStoredUsers() {
+    // Prevent SSR access to localStorage
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    try {
+      const usersStr = localStorage.getItem("croplink-users");
+      console.log(
+        "🔍 Raw users from localStorage:",
+        usersStr ? "found" : "not found",
+      );
+
+      let users = usersStr ? JSON.parse(usersStr) : [];
+      console.log("📋 Parsed users:", users.length, "users found");
+
+      // Initialize with a test user if no users exist
+      if (users.length === 0) {
+        console.log("🧪 Creating test user for demo");
+        const testUser = {
+          id: "test-user-001",
+          name: "Test User",
+          email: "test@croplink.com",
+          phone: "1234567890",
+          password: btoa("Test123!"), // password: Test123!
+          createdAt: new Date().toISOString(),
+        };
+        users = [testUser];
+        localStorage.setItem("croplink-users", JSON.stringify(users));
+        console.log(
+          "✅ Test user created. Login with: test@croplink.com / Test123!",
+        );
+      }
+
+      return users;
+    } catch (error) {
+      console.error("❌ Error getting stored users:", error);
+      return [];
+    }
   }
 }
 
-export const clientAuthService = new ClientAuthService()
+export const clientAuthService = new ClientAuthService();
+
+// Initialize the auth service
+if (typeof window !== "undefined") {
+  try {
+    clientAuthService.init();
+    console.log("🔧 Auth service initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize auth service:", error);
+  }
+}
