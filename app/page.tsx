@@ -1435,7 +1435,6 @@ export default function CropLinkApp() {
     );
   }
 
-  console.log("✅ Rendering main app with user:", user?.name);
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Main App Container */}
