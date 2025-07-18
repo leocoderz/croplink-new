@@ -209,25 +209,30 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
+      console.log(
+        "🔐 Sending password reset email to:",
+        forgotPasswordData.email,
+      );
+
+      const response = await fetch("/api/send-reset-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(forgotPasswordData),
+        body: JSON.stringify({ email: forgotPasswordData.email }),
       });
 
       const result = await response.json();
 
-      if (response.ok) {
+      if (response.ok && result.success) {
         setForgotPasswordSent(true);
         toast({
-          title: "Reset link sent!",
-          description:
-            result.message ||
-            "Check your email for password reset instructions.",
+          title: "🔐 Reset link sent!",
+          description: `Password reset instructions have been sent to ${forgotPasswordData.email}. Check your inbox!`,
         });
+        console.log("✅ Password reset email sent successfully");
       } else {
+        console.error("❌ Password reset failed:", result.message);
         toast({
           title: "Error",
           description:
@@ -235,7 +240,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("❌ Password reset error:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
