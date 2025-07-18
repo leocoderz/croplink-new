@@ -126,13 +126,17 @@ class ClientAuthService {
           "❌ Available emails:",
           storedUsers.map((u) => u.email),
         );
-        throw new Error("No account found with this email address");
+        throw new Error(
+          `❌ No account found with the email "${data.email}". Please check your email address or create a new account.`,
+        );
       }
 
       // Check password (in real app, would compare hashed passwords)
       const providedPasswordHash = btoa(data.password);
       if (user.password !== providedPasswordHash) {
-        throw new Error("Incorrect password");
+        throw new Error(
+          "🔐 Incorrect password. Please check your password and try again, or use 'Forgot Password' to reset it.",
+        );
       }
 
       // Create clean user object (without password)
