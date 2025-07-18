@@ -34,7 +34,7 @@ export default function CropLinkApp() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [notificationsList, setNotificationsList] = useState<any[]>([]);
 
   const { t } = useLanguage();
