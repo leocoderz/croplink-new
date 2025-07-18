@@ -89,17 +89,31 @@ class ClientAuthService {
   async login(data: { email: string; password: string }) {
     try {
       console.log("🔄 Starting login process...");
+      console.log("📧 Login attempt for email:", data.email);
 
       // Clear any existing data first
       this.clearUserData();
 
       // Get stored users (simulate database lookup)
       const storedUsers = this.getStoredUsers();
-      const user = storedUsers.find(
-        (u) => u.email === data.email.trim().toLowerCase(),
+      console.log("👥 Found stored users:", storedUsers.length);
+      console.log(
+        "📋 Stored user emails:",
+        storedUsers.map((u) => u.email),
       );
 
+      const searchEmail = data.email.trim().toLowerCase();
+      console.log("🔍 Searching for email:", searchEmail);
+
+      const user = storedUsers.find((u) => u.email === searchEmail);
+      console.log("👤 Found user:", !!user);
+
       if (!user) {
+        console.error("❌ No user found with email:", searchEmail);
+        console.error(
+          "❌ Available emails:",
+          storedUsers.map((u) => u.email),
+        );
         throw new Error("No account found with this email address");
       }
 
