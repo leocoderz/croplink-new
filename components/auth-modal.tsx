@@ -578,6 +578,12 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         )}
                       </Button>
                     </div>
+                    {passwordError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <span className="mr-1">⚠️</span>
+                        {passwordError}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex justify-end">
