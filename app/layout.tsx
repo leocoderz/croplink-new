@@ -13,6 +13,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "CropLink - Smart Farming Companion",
   description: "Your intelligent farming companion for crop management, weather monitoring, and agricultural insights.",
+  icons: {
+    icon: "/favicon.ico",  // ✅ This is OK
+  },
   keywords: "farming, agriculture, crop management, weather, smart farming",
   authors: [{ name: "CropLink Team" }],
   creator: "CropLink",
