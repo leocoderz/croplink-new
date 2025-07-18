@@ -162,9 +162,9 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
         console.log("✅ Sign up successful:", result.user);
 
         toast({
-          title: "Account created!",
+          title: "🎉 Account created!",
           description:
-            result.message || "Your account has been created successfully.",
+            "Your account has been created successfully! Check your email for a welcome message.",
         });
 
         // Auto-login after successful signup
