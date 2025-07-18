@@ -247,8 +247,26 @@ class ClientAuthService {
         usersStr ? "found" : "not found",
       );
 
-      const users = usersStr ? JSON.parse(usersStr) : [];
+      let users = usersStr ? JSON.parse(usersStr) : [];
       console.log("📋 Parsed users:", users.length, "users found");
+
+      // Initialize with a test user if no users exist
+      if (users.length === 0) {
+        console.log("🧪 Creating test user for demo");
+        const testUser = {
+          id: "test-user-001",
+          name: "Test User",
+          email: "test@croplink.com",
+          phone: "1234567890",
+          password: btoa("Test123!"), // password: Test123!
+          createdAt: new Date().toISOString(),
+        };
+        users = [testUser];
+        localStorage.setItem("croplink-users", JSON.stringify(users));
+        console.log(
+          "✅ Test user created. Login with: test@croplink.com / Test123!",
+        );
+      }
 
       return users;
     } catch (error) {
