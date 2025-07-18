@@ -307,48 +307,38 @@ export default function CropLinkApp() {
   }, []);
 
   // Handle client-side mounting to prevent hydration issues
+  // Handle client-side mounting and initialization in one effect
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Initialize app and check authentication (only after mounting)
-  useEffect(() => {
-    if (!isMounted) return;
-
     console.log("🚀 Starting app initialization...");
 
-    // Use a flag to prevent multiple initializations
-    let isInitialized = false;
+    // Set mounted state
+    setIsMounted(true);
 
-    if (!isInitialized) {
-      isInitialized = true;
+    try {
+      // Check for existing user
+      const authData = clientAuthService.getCurrentUser();
+      console.log("🔍 Auth check result:", authData);
 
-      try {
-        // Check for existing user
-        const authData = clientAuthService.getCurrentUser();
-        console.log("🔍 Auth check result:", authData);
-
-        if (authData.isAuthenticated && authData.user) {
-          console.log("✅ Found user:", authData.user.name);
-          setUser(authData.user);
-          setShowAuthModal(false);
-        } else {
-          console.log("ℹ️ No user - showing auth");
-          setUser(null);
-          setShowAuthModal(true);
-        }
-      } catch (error) {
-        console.error("❌ Init error:", error);
+      if (authData.isAuthenticated && authData.user) {
+        console.log("✅ Found user:", authData.user.name);
+        setUser(authData.user);
+        setShowAuthModal(false);
+      } else {
+        console.log("ℹ️ No user - showing auth");
         setUser(null);
         setShowAuthModal(true);
       }
-
-      // Always complete initialization
-      console.log("✅ Setting app ready");
-      setIsLoading(false);
-      setIsAppReady(true);
+    } catch (error) {
+      console.error("❌ Init error:", error);
+      setUser(null);
+      setShowAuthModal(true);
     }
-  }, [isMounted]);
+
+    // Always complete initialization
+    console.log("✅ Setting app ready");
+    setIsLoading(false);
+    setIsAppReady(true);
+  }, []); // Empty dependency array - run only once
 
   const handleAuthSuccess = useCallback(
     (userData: any) => {
