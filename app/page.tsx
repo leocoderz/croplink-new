@@ -1452,13 +1452,6 @@ export default function CropLinkApp() {
         <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
-
       {/* User Profile Modal */}
       {user && (
         <UserProfile
