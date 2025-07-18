@@ -305,8 +305,15 @@ export default function CropLinkApp() {
     setNotifications((prevCount) => Math.max(0, prevCount - 1));
   }, []);
 
-  // Initialize app and check authentication
+  // Handle client-side mounting to prevent hydration issues
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Initialize app and check authentication (only after mounting)
+  useEffect(() => {
+    if (!isMounted) return;
+
     console.log("🚀 Starting app initialization...");
 
     try {
@@ -333,7 +340,7 @@ export default function CropLinkApp() {
     console.log("✅ Setting app ready");
     setIsLoading(false);
     setIsAppReady(true);
-  }, []);
+  }, [isMounted]);
 
   const handleAuthSuccess = useCallback(
     (userData: any) => {
