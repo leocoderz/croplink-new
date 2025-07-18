@@ -205,9 +205,20 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
 
   const toggleListening = () => {
     if (!recognition) {
-      alert(
-        "Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.",
-      );
+      // Add a friendly message to chat instead of alert
+      const errorMessage: Message = {
+        id: Date.now(),
+        text: "🎤 Voice input is not supported in your browser. Please use Chrome, Edge, or Safari for the best experience, or continue typing your messages.",
+        sender: "bot",
+        timestamp: new Date(),
+        type: "info",
+        suggestions: [
+          "Type your message",
+          "Update browser",
+          "Use supported browser",
+        ],
+      };
+      setMessages((prev) => [...prev, errorMessage]);
       return;
     }
 
@@ -226,21 +237,57 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
           navigator.mediaDevices
             .getUserMedia({ audio: true })
             .then(() => {
-              recognition.start();
+              try {
+                recognition.start();
+              } catch (startError) {
+                console.error(
+                  "Error starting recognition after permission:",
+                  startError,
+                );
+                handleVoiceError(
+                  "Failed to start voice recognition. Please try again.",
+                );
+              }
             })
             .catch((error) => {
               console.error("Microphone permission error:", error);
-              alert("Please allow microphone access to use voice input.");
+              handleVoiceError(
+                "Please allow microphone access to use voice input. Check your browser's microphone permissions.",
+              );
             });
         } else {
-          recognition.start();
+          // Fallback for older browsers
+          try {
+            recognition.start();
+          } catch (fallbackError) {
+            console.error("Fallback recognition start error:", fallbackError);
+            handleVoiceError(
+              "Voice input not available. Please type your message instead.",
+            );
+          }
         }
       } catch (error) {
-        console.error("Error starting recognition:", error);
-        alert("Failed to start voice recognition. Please try again.");
+        console.error("Error in voice recognition setup:", error);
+        handleVoiceError(
+          "Failed to setup voice recognition. Please try typing your message.",
+        );
         setIsListening(false);
       }
     }
+  };
+
+  // Helper function to handle voice errors consistently
+  const handleVoiceError = (message: string) => {
+    const errorMessage: Message = {
+      id: Date.now(),
+      text: `🎤 ${message}`,
+      sender: "bot",
+      timestamp: new Date(),
+      type: "warning",
+      suggestions: ["Type instead", "Check permissions", "Try again"],
+    };
+    setMessages((prev) => [...prev, errorMessage]);
+    setIsListening(false);
   };
 
   const handleSendMessage = async () => {
