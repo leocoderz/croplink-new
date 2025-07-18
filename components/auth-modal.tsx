@@ -76,6 +76,84 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
 
+  // Validation helper functions
+  const validateEmail = (email: string) => {
+    if (!email.trim()) {
+      return "Email is required";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return "Please enter a valid email address (e.g., user@example.com)";
+    }
+    return "";
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      return "Password is required";
+    }
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return "Password must contain at least one number";
+    }
+    if (!/(?=.*[!@#$%^&*(),.?":{}|<>])/.test(password)) {
+      return "Password must contain at least one special character (!@#$%^&*)";
+    }
+    return "";
+  };
+
+  const validateName = (name: string) => {
+    if (!name.trim()) {
+      return "Full name is required";
+    }
+    if (name.trim().length < 2) {
+      return "Name must be at least 2 characters long";
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      return "Name can only contain letters and spaces";
+    }
+    return "";
+  };
+
+  const validatePhone = (phone: string) => {
+    if (!phone.trim()) {
+      return "Phone number is required";
+    }
+    if (!/^\+?[\d\s\-()]{10,}$/.test(phone.trim())) {
+      return "Please enter a valid phone number (at least 10 digits)";
+    }
+    return "";
+  };
+
+  const validateConfirmPassword = (
+    password: string,
+    confirmPassword: string,
+  ) => {
+    if (!confirmPassword) {
+      return "Please confirm your password";
+    }
+    if (password !== confirmPassword) {
+      return "Passwords do not match";
+    }
+    return "";
+  };
+
+  // Clear all validation errors
+  const clearValidationErrors = () => {
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
+    setNameError("");
+    setPhoneError("");
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
