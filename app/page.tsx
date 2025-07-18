@@ -768,14 +768,19 @@ export default function CropLinkApp() {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-2xl sm:text-3xl font-bold mb-2">
-                            {Math.round(25 + Math.random() * 10)}°C
+                            {isMounted
+                              ? Math.round(25 + (Date.now() % 10000) / 1000)
+                              : 28}
+                            °C
                           </div>
                           <div className="text-blue-100 font-medium mb-1 text-sm sm:text-base">
                             {farmData.weatherCondition !== "Unknown"
                               ? farmData.weatherCondition
-                              : ["Sunny", "Partly Cloudy", "Clear"][
-                                  Math.floor(Math.random() * 3)
-                                ]}
+                              : isMounted
+                                ? ["Sunny", "Partly Cloudy", "Clear"][
+                                    Math.floor((Date.now() % 3000) / 1000)
+                                  ]
+                                : "Sunny"}
                           </div>
                           <div className="text-blue-200 text-xs sm:text-sm">
                             Perfect for farming
