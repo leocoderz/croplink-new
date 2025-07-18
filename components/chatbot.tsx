@@ -113,6 +113,12 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
           console.log("Speech recognition result:", transcript);
           setInputMessage(transcript);
           setIsListening(false);
+
+          // Clear timeout since we got a result
+          if (recognitionTimeoutRef.current) {
+            clearTimeout(recognitionTimeoutRef.current);
+            recognitionTimeoutRef.current = null;
+          }
         };
 
         recognitionInstance.onerror = (event) => {
