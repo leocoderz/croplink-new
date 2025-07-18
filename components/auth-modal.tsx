@@ -478,6 +478,24 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                       "Sign In"
                     )}
                   </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      console.log("🧪 Demo login clicked");
+                      const demoUser = {
+                        id: "demo-user",
+                        name: "Demo User",
+                        email: "demo@croplink.com",
+                        phone: "1234567890",
+                      };
+                      onAuthSuccess(demoUser);
+                    }}
+                    variant="outline"
+                    className="w-full mt-2"
+                  >
+                    Demo Login
+                  </Button>
                 </form>
               </CardContent>
             </Card>
