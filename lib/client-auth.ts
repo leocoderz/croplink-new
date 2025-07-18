@@ -76,6 +76,10 @@ class ClientAuthService {
       this.storeUserData(newUser, token);
       console.log("✅ User data stored successfully");
 
+      // Send welcome email
+      console.log("📧 Sending welcome email...");
+      this.sendWelcomeEmail(newUser.email, newUser.name);
+
       console.log("🎉 Signup completed successfully!");
       return {
         success: true,
