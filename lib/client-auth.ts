@@ -40,7 +40,9 @@ class ClientAuthService {
       const existingUser = existingUsers.find((u) => u.email === searchEmail);
 
       if (existingUser) {
-        throw new Error("An account with this email already exists");
+        throw new Error(
+          `⚠️ An account with the email "${data.email}" already exists. Please sign in instead or use a different email address.`,
+        );
       }
 
       // Create new user (simulate API response)
