@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Send,
   Bot,
@@ -19,28 +19,28 @@ import {
   MicOff,
   Zap,
   Leaf,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Extend Window interface for speech recognition
 declare global {
   interface Window {
-    SpeechRecognition: any
-    webkitSpeechRecognition: any
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
   }
 }
 
 interface Message {
-  id: number
-  text: string
-  sender: "user" | "bot"
-  timestamp: Date
-  suggestions?: string[]
-  type?: "advice" | "warning" | "info" | "success"
+  id: number;
+  text: string;
+  sender: "user" | "bot";
+  timestamp: Date;
+  suggestions?: string[];
+  type?: "advice" | "warning" | "info" | "success";
 }
 
 interface ChatBotProps {
-  onNotification?: (notification: any) => void
+  onNotification?: (notification: any) => void;
 }
 
 export function ChatBot({ onNotification }: ChatBotProps = {}) {
@@ -50,116 +50,174 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
       text: "🌾 Welcome to CropLink AI Assistant! I'm here to help you with all your farming needs. Ask me about weather, crops, diseases, irrigation, government schemes, or any agricultural topic!",
       sender: "bot",
       timestamp: new Date(),
-      suggestions: ["Weather advice", "Crop diseases", "Government schemes", "Irrigation tips"],
+      suggestions: [
+        "Weather advice",
+        "Crop diseases",
+        "Government schemes",
+        "Irrigation tips",
+      ],
       type: "success",
     },
-  ])
-  const [inputMessage, setInputMessage] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
-  const [isListening, setIsListening] = useState(false)
-  const [recognition, setRecognition] = useState<any>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize speech recognition
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Check for speech recognition support
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
 
       if (SpeechRecognition) {
-        const recognitionInstance = new SpeechRecognition()
+        const recognitionInstance = new SpeechRecognition();
 
         // Configure recognition settings
-        recognitionInstance.continuous = false
-        recognitionInstance.interimResults = false
-        recognitionInstance.lang = "en-US"
-        recognitionInstance.maxAlternatives = 1
+        recognitionInstance.continuous = false;
+        recognitionInstance.interimResults = false;
+        recognitionInstance.lang = "en-US";
+        recognitionInstance.maxAlternatives = 1;
 
         recognitionInstance.onstart = () => {
-          console.log("Speech recognition started")
-          setIsListening(true)
-        }
+          console.log("Speech recognition started");
+          setIsListening(true);
+        };
 
         recognitionInstance.onresult = (event) => {
-          const transcript = event.results[0][0].transcript
-          console.log("Speech recognition result:", transcript)
-          setInputMessage(transcript)
-          setIsListening(false)
-        }
+          const transcript = event.results[0][0].transcript;
+          console.log("Speech recognition result:", transcript);
+          setInputMessage(transcript);
+          setIsListening(false);
+        };
 
         recognitionInstance.onerror = (event) => {
-          console.error("Speech recognition error:", event.error)
-          setIsListening(false)
+          console.error("Speech recognition error:", event.error);
+          setIsListening(false);
 
-          // Show user-friendly error messages
+          // Handle errors gracefully without alerts
+          let errorMessage = "";
+          let shouldNotify = false;
+
           switch (event.error) {
             case "no-speech":
-              alert("No speech detected. Please try again.")
-              break
+              errorMessage =
+                "🎤 No speech detected. Please speak clearly and try again.";
+              // Don't notify for no-speech as it's common and not critical
+              break;
             case "audio-capture":
-              alert("Microphone not accessible. Please check permissions.")
-              break
+              errorMessage =
+                "🚫 Microphone not accessible. Please check your microphone connection.";
+              shouldNotify = true;
+              break;
             case "not-allowed":
-              alert("Microphone permission denied. Please enable microphone access.")
-              break
+              errorMessage =
+                "🔒 Microphone permission denied. Please enable microphone access in your browser settings.";
+              shouldNotify = true;
+              break;
             case "network":
-              alert("Network error. Please check your connection.")
-              break
+              errorMessage =
+                "🌐 Network error occurred. Please check your internet connection.";
+              shouldNotify = true;
+              break;
+            case "service-not-allowed":
+              errorMessage =
+                "🚫 Speech recognition service not available. Please try typing your message instead.";
+              shouldNotify = true;
+              break;
+            case "bad-grammar":
+              errorMessage =
+                "🔤 Speech not recognized clearly. Please speak more clearly and try again.";
+              break;
             default:
-              alert("Speech recognition failed. Please try again.")
+              errorMessage =
+                "❌ Speech recognition failed. Please try typing your message instead.";
+              shouldNotify = true;
           }
-        }
+
+          // Add error message to chat for better UX
+          if (errorMessage) {
+            const errorChatMessage: Message = {
+              id: Date.now(),
+              text:
+                errorMessage +
+                " You can type your message or try voice input again.",
+              sender: "bot",
+              timestamp: new Date(),
+              type: "warning",
+              suggestions: [
+                "Try typing instead",
+                "Check microphone",
+                "Try voice again",
+              ],
+            };
+            setMessages((prev) => [...prev, errorChatMessage]);
+          }
+
+          // Send notification for critical errors only
+          if (shouldNotify && onNotification) {
+            onNotification({
+              title: "Voice Input Error",
+              message: errorMessage,
+              type: "warning",
+            });
+          }
+        };
 
         recognitionInstance.onend = () => {
-          console.log("Speech recognition ended")
-          setIsListening(false)
-        }
+          console.log("Speech recognition ended");
+          setIsListening(false);
+        };
 
-        setRecognition(recognitionInstance)
+        setRecognition(recognitionInstance);
       } else {
-        console.warn("Speech recognition not supported in this browser")
+        console.warn("Speech recognition not supported in this browser");
       }
     }
-  }, [])
+  }, []);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputMessage(e.target.value)
-  }
+    setInputMessage(e.target.value);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+      e.preventDefault();
+      handleSendMessage();
     }
-  }
+  };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setInputMessage(suggestion)
-    inputRef.current?.focus()
-  }
+    setInputMessage(suggestion);
+    inputRef.current?.focus();
+  };
 
   const toggleListening = () => {
     if (!recognition) {
-      alert("Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.")
-      return
+      alert(
+        "Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.",
+      );
+      return;
     }
 
     if (isListening) {
       try {
-        recognition.stop()
-        setIsListening(false)
+        recognition.stop();
+        setIsListening(false);
       } catch (error) {
-        console.error("Error stopping recognition:", error)
-        setIsListening(false)
+        console.error("Error stopping recognition:", error);
+        setIsListening(false);
       }
     } else {
       try {
@@ -168,42 +226,44 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
           navigator.mediaDevices
             .getUserMedia({ audio: true })
             .then(() => {
-              recognition.start()
+              recognition.start();
             })
             .catch((error) => {
-              console.error("Microphone permission error:", error)
-              alert("Please allow microphone access to use voice input.")
-            })
+              console.error("Microphone permission error:", error);
+              alert("Please allow microphone access to use voice input.");
+            });
         } else {
-          recognition.start()
+          recognition.start();
         }
       } catch (error) {
-        console.error("Error starting recognition:", error)
-        alert("Failed to start voice recognition. Please try again.")
-        setIsListening(false)
+        console.error("Error starting recognition:", error);
+        alert("Failed to start voice recognition. Please try again.");
+        setIsListening(false);
       }
     }
-  }
+  };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
       id: Date.now(),
       text: inputMessage.trim(),
       sender: "user",
       timestamp: new Date(),
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInputMessage("")
-    setIsTyping(true)
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsTyping(true);
 
     // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 + Math.random() * 2000),
+    );
 
     // Generate contextual response based on user input
-    const response = generateResponse(userMessage.text)
+    const response = generateResponse(userMessage.text);
 
     const botMessage: Message = {
       id: Date.now() + 1,
@@ -212,10 +272,10 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
       timestamp: new Date(),
       suggestions: response.suggestions,
       type: response.type,
-    }
+    };
 
-    setMessages((prev) => [...prev, botMessage])
-    setIsTyping(false)
+    setMessages((prev) => [...prev, botMessage]);
+    setIsTyping(false);
 
     // Send notification for important advice
     if (response.isImportant) {
@@ -223,28 +283,37 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
         title: "CropLink AI Advice",
         message: response.text.substring(0, 100) + "...",
         type: response.type || "info",
-      })
+      });
     }
-  }
+  };
 
   const generateResponse = (
     input: string,
   ): {
-    text: string
-    suggestions?: string[]
-    isImportant?: boolean
-    type?: "advice" | "warning" | "info" | "success"
+    text: string;
+    suggestions?: string[];
+    isImportant?: boolean;
+    type?: "advice" | "warning" | "info" | "success";
   } => {
-    const lowerInput = input.toLowerCase()
+    const lowerInput = input.toLowerCase();
 
     // Weather-related queries
-    if (lowerInput.includes("weather") || lowerInput.includes("rain") || lowerInput.includes("temperature")) {
+    if (
+      lowerInput.includes("weather") ||
+      lowerInput.includes("rain") ||
+      lowerInput.includes("temperature")
+    ) {
       return {
         text: "🌤️ Weather is crucial for farming success! Check our Weather Widget for real-time forecasts. I recommend monitoring daily conditions and setting up alerts for your crops. Sudden weather changes can significantly impact irrigation needs, pest activity, and harvest timing.",
-        suggestions: ["Check weather forecast", "Set weather alerts", "Irrigation planning", "Seasonal crop planning"],
+        suggestions: [
+          "Check weather forecast",
+          "Set weather alerts",
+          "Irrigation planning",
+          "Seasonal crop planning",
+        ],
         isImportant: true,
         type: "advice",
-      }
+      };
     }
 
     // Disease-related queries
@@ -257,10 +326,15 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
     ) {
       return {
         text: "🔍 Early disease detection saves crops! Use our Disease Predictor to upload photos of affected plants. Look for signs like yellowing leaves, spots, wilting, or unusual growth. Prevention is always better than cure - maintain proper spacing, drainage, and crop rotation.",
-        suggestions: ["Use Disease Predictor", "Upload plant photo", "Prevention tips", "Organic treatments"],
+        suggestions: [
+          "Use Disease Predictor",
+          "Upload plant photo",
+          "Prevention tips",
+          "Organic treatments",
+        ],
         isImportant: true,
         type: "warning",
-      }
+      };
     }
 
     // Crop management queries
@@ -272,9 +346,14 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
     ) {
       return {
         text: "🌱 Successful crop management requires planning! Consider soil preparation, seed quality, planting density, and growth stages. Monitor regularly for pests, diseases, and nutrient deficiencies. Proper timing for planting and harvesting maximizes yield and quality.",
-        suggestions: ["Soil preparation", "Seed selection", "Growth monitoring", "Harvest timing"],
+        suggestions: [
+          "Soil preparation",
+          "Seed selection",
+          "Growth monitoring",
+          "Harvest timing",
+        ],
         type: "advice",
-      }
+      };
     }
 
     // Fertilizer queries
@@ -287,9 +366,14 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
     ) {
       return {
         text: "🧪 Smart fertilization boosts productivity! Always start with soil testing to understand nutrient needs. Over-fertilization wastes money and harms the environment. Consider organic options like compost, vermicompost, and green manures for sustainable farming.",
-        suggestions: ["Get soil test", "Calculate fertilizer needs", "Organic alternatives", "Application timing"],
+        suggestions: [
+          "Get soil test",
+          "Calculate fertilizer needs",
+          "Organic alternatives",
+          "Application timing",
+        ],
         type: "advice",
-      }
+      };
     }
 
     // Government schemes queries
@@ -302,9 +386,14 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
     ) {
       return {
         text: "🏛️ Government support is available! Check our Government Schemes section for subsidies, loans, and insurance programs. Many schemes offer support for equipment, seeds, irrigation systems, and crop insurance. Apply early as many have limited slots.",
-        suggestions: ["Browse schemes", "Check eligibility", "Application process", "Required documents"],
+        suggestions: [
+          "Browse schemes",
+          "Check eligibility",
+          "Application process",
+          "Required documents",
+        ],
         type: "info",
-      }
+      };
     }
 
     // Irrigation queries
@@ -323,7 +412,7 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
           "Irrigation scheduling",
         ],
         type: "advice",
-      }
+      };
     }
 
     // Market price queries
@@ -335,9 +424,14 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
     ) {
       return {
         text: "💰 Market timing affects profits! Monitor local and regional prices, consider direct selling to consumers or farmer markets. Quality produce commands premium prices. Plan your harvest timing based on market demand and seasonal price trends.",
-        suggestions: ["Check market rates", "Quality improvement", "Direct selling", "Value addition"],
+        suggestions: [
+          "Check market rates",
+          "Quality improvement",
+          "Direct selling",
+          "Value addition",
+        ],
         type: "success",
-      }
+      };
     }
 
     // Technology queries
@@ -349,18 +443,32 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
     ) {
       return {
         text: "📱 CropLink brings technology to your farm! Use our integrated features - weather monitoring, disease detection, data analysis, and scheme information. Smart farming increases efficiency and reduces costs while improving yields.",
-        suggestions: ["Explore app features", "Data analysis", "Smart farming tips", "Technology adoption"],
+        suggestions: [
+          "Explore app features",
+          "Data analysis",
+          "Smart farming tips",
+          "Technology adoption",
+        ],
         type: "info",
-      }
+      };
     }
 
     // General farming advice
-    if (lowerInput.includes("farming") || lowerInput.includes("agriculture") || lowerInput.includes("farm")) {
+    if (
+      lowerInput.includes("farming") ||
+      lowerInput.includes("agriculture") ||
+      lowerInput.includes("farm")
+    ) {
       return {
         text: "🚜 Modern farming combines tradition with innovation! Focus on soil health, sustainable practices, and continuous learning. Use CropLink's tools for better decision-making. Remember: healthy soil = healthy crops = healthy profits!",
-        suggestions: ["Sustainable practices", "Soil health", "Crop rotation", "Integrated farming"],
+        suggestions: [
+          "Sustainable practices",
+          "Soil health",
+          "Crop rotation",
+          "Integrated farming",
+        ],
         type: "advice",
-      }
+      };
     }
 
     // Default response for other queries
@@ -375,34 +483,34 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
         "Fertilizer guide",
       ],
       type: "info",
-    }
-  }
+    };
+  };
 
   const getMessageIcon = (type?: string) => {
     switch (type) {
       case "advice":
-        return <Lightbulb className="h-3 w-3 text-amber-500" />
+        return <Lightbulb className="h-3 w-3 text-amber-500" />;
       case "warning":
-        return <Bug className="h-3 w-3 text-red-500" />
+        return <Bug className="h-3 w-3 text-red-500" />;
       case "success":
-        return <TrendingUp className="h-3 w-3 text-emerald-500" />
+        return <TrendingUp className="h-3 w-3 text-emerald-500" />;
       default:
-        return <MessageCircle className="h-3 w-3 text-blue-500" />
+        return <MessageCircle className="h-3 w-3 text-blue-500" />;
     }
-  }
+  };
 
   const getMessageBadgeColor = (type?: string) => {
     switch (type) {
       case "advice":
-        return "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200 dark:from-amber-900/30 dark:to-yellow-900/30 dark:text-amber-300 dark:border-amber-700/50"
+        return "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-amber-200 dark:from-amber-900/30 dark:to-yellow-900/30 dark:text-amber-300 dark:border-amber-700/50";
       case "warning":
-        return "bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border-red-200 dark:from-red-900/30 dark:to-rose-900/30 dark:text-red-300 dark:border-red-700/50"
+        return "bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border-red-200 dark:from-red-900/30 dark:to-rose-900/30 dark:text-red-300 dark:border-red-700/50";
       case "success":
-        return "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-emerald-200 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-300 dark:border-emerald-700/50"
+        return "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-emerald-200 dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-300 dark:border-emerald-700/50";
       default:
-        return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-200 dark:from-blue-900/30 dark:to-cyan-900/30 dark:text-blue-300 dark:border-blue-700/50"
+        return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-200 dark:from-blue-900/30 dark:to-cyan-900/30 dark:text-blue-300 dark:border-blue-700/50";
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
@@ -414,7 +522,9 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-semibold truncate">CropLink AI Assistant</h1>
+            <h1 className="text-lg font-semibold truncate">
+              CropLink AI Assistant
+            </h1>
             <p className="text-xs text-white/80 flex items-center gap-1">
               <Zap className="h-3 w-3" />
               Powered by Agricultural Intelligence
@@ -422,7 +532,10 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
           </div>
           <div className="flex items-center gap-1">
             <Leaf className="h-4 w-4 animate-pulse" />
-            <Sparkles className="h-4 w-4 animate-pulse" style={{ animationDelay: "0.5s" }} />
+            <Sparkles
+              className="h-4 w-4 animate-pulse"
+              style={{ animationDelay: "0.5s" }}
+            />
           </div>
         </div>
       </div>
@@ -436,7 +549,9 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                 key={message.id}
                 className={cn(
                   "flex gap-2 max-w-[90%] animate-in slide-in-from-bottom-2 duration-500",
-                  message.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto",
+                  message.sender === "user"
+                    ? "ml-auto flex-row-reverse"
+                    : "mr-auto",
                 )}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -448,7 +563,11 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                       : "bg-gradient-to-br from-emerald-500 to-green-600 text-white",
                   )}
                 >
-                  {message.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                  {message.sender === "user" ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    <Bot className="h-4 w-4" />
+                  )}
                 </div>
 
                 <div
@@ -462,8 +581,14 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                   {message.sender === "bot" && message.type && (
                     <div className="flex items-center gap-2 mb-2">
                       {getMessageIcon(message.type)}
-                      <Badge className={cn("text-xs font-medium border", getMessageBadgeColor(message.type))}>
-                        {message.type.charAt(0).toUpperCase() + message.type.slice(1)}
+                      <Badge
+                        className={cn(
+                          "text-xs font-medium border",
+                          getMessageBadgeColor(message.type),
+                        )}
+                      >
+                        {message.type.charAt(0).toUpperCase() +
+                          message.type.slice(1)}
                       </Badge>
                     </div>
                   )}
@@ -471,7 +596,9 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                   <p
                     className={cn(
                       "text-sm leading-relaxed break-words",
-                      message.sender === "user" ? "text-white" : "text-gray-800 dark:text-gray-200",
+                      message.sender === "user"
+                        ? "text-white"
+                        : "text-gray-800 dark:text-gray-200",
                     )}
                   >
                     {message.text}
@@ -496,7 +623,9 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                   <div
                     className={cn(
                       "text-xs mt-2 opacity-70 flex items-center gap-1",
-                      message.sender === "user" ? "text-white/80" : "text-gray-500 dark:text-gray-400",
+                      message.sender === "user"
+                        ? "text-white/80"
+                        : "text-gray-500 dark:text-gray-400",
                     )}
                   >
                     <div className="w-1 h-1 rounded-full bg-current"></div>
@@ -527,7 +656,9 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                         style={{ animationDelay: "0.4s" }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Listening...</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      Listening...
+                    </span>
                   </div>
                 </div>
               </div>
@@ -551,7 +682,9 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                         style={{ animationDelay: "0.2s" }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">AI is thinking...</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      AI is thinking...
+                    </span>
                   </div>
                 </div>
               </div>
@@ -590,7 +723,11 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
                 : "bg-white/90 hover:bg-gray-50/90 dark:bg-gray-800/90 dark:hover:bg-gray-700/90",
             )}
           >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            {isListening ? (
+              <MicOff className="h-4 w-4" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
           </Button>
           <Button
             onClick={handleSendMessage}
@@ -605,9 +742,12 @@ export function ChatBot({ onNotification }: ChatBotProps = {}) {
           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
             CropLink AI • Powered by agricultural expertise
           </p>
-          <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }}></div>
+          <div
+            className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"
+            style={{ animationDelay: "0.5s" }}
+          ></div>
         </div>
       </div>
     </div>
-  )
+  );
 }
